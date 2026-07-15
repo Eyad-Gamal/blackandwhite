@@ -1,0 +1,92 @@
+{
+  "header": {
+    "home": "Home",
+    "collection": "Collection",
+    "story": "Our Story",
+    "contact": "Contact",
+    "search": "Search for an item..."
+  },
+  "search": {
+    "no_results": "No results found."
+  },
+  "hero": {
+    "styledWord": "You",
+    "headline": "Fashion that expresses <span class='stroke-text'>You</span><br>",
+    "tagline": "True elegance lies in the details, luxurious materials and creative designs.",
+    "productLabel": "Featured Item",
+    "startsFrom": "Starts from",
+    "currency": "EGP",
+    "price": "Price",
+    "badge": "NEW ARRIVAL"
+  },
+  "announcement": {
+    "freeDelivery": "Free delivery for orders over 500 EGP",
+    "launch": "Launch of the first Black & White collection",
+    "return": "Free exchange within 7 days",
+    "guarantee": "100% Guaranteed original quality"
+  },
+  "products": {
+    "eyebrow": "Exclusive Collection",
+    "title": "Choose your favorite piece",
+    "sub": "Limited edition designs crafted with care to give you the uniqueness and elegance you deserve.",
+    "filterAll": "All"
+  },
+  "productCard": {
+    "new": "New",
+    "quickView": "Quick View",
+    "sizes": "Sizes:"
+  },
+  "modal": {
+    "chooseSize": "Choose Size:",
+    "details": "Details:",
+    "customSizeDesc": "Custom sizing:",
+    "customSizePlaceholder": "Write your desired length, width, or any notes...",
+    "phoneLabel": "Contact Number:",
+    "phonePlaceholder": "Enter your phone number here...",
+    "orderBtn": "Order now via WhatsApp",
+    "orderSuccess": "Redirected to WhatsApp successfully!",
+    "coupon": "Discount Coupon (Optional)",
+    "applyCoupon": "Apply",
+    "couponApplied": "Coupon Applied"
+  },
+  "story": {
+    "eyebrow": "About Us",
+    "title": "Not just a store, but a lifestyle.",
+    "p1": "At Black & White, we believe that elegance is not just what you wear, but how it expresses your personality. We started our journey with a passion to offer unique pieces combining innovative design and luxurious materials.",
+    "p2": "Every piece here is designed and tailored with the highest quality standards to suit your refined taste.",
+    "pillar1": {
+      "title": "Unmatched Quality",
+      "desc": "We use the best imported materials to ensure comfort and longevity."
+    },
+    "pillar2": {
+      "title": "Exclusive Designs",
+      "desc": "Unique models you won't find anywhere else, made specially for you."
+    }
+  },
+  "social": {
+    "eyebrow": "Connect With Us",
+    "title": "Join Our Community",
+    "sub": "Follow us on social media for the latest offers and new collection details."
+  },
+  "footer": {
+    "desc": "A leading Egyptian brand in high-end fashion, we offer modern designs combining luxury and comfort to suit your lifestyle.",
+    "linksTitle": "Quick Links",
+    "supportTitle": "Support",
+    "policy": "Return Policy",
+    "terms": "Terms & Conditions",
+    "faq": "FAQ",
+    "contactTitle": "Contact Us",
+    "copy": "All rights reserved. Developed by Fakhm."
+  },
+  "alert": {
+    "selectSize": "Please select a size",
+    "enterPhone": "Please enter a valid contact number",
+    "whatsappNewOrder": "New Order:",
+    "whatsappProduct": "Product:",
+    "whatsappSize": "Size:",
+    "whatsappBasePrice": "Base Price:",
+    "whatsappCoupon": "Coupon Code:",
+    "whatsappDiscountPrice": "Price after discount:",
+    "whatsappPhone": "Customer Phone:"
+  }
+}
