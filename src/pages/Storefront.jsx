@@ -388,7 +388,6 @@ export default function Storefront() {
           <p style={{ fontSize: '0.75rem', color: 'var(--gray-mid)' }}>
             © 2026 <strong style={{ color: 'var(--white)' }}>Black & White</strong> — {t('footer.copy')}
           </p>
-          <Link to="/admin" style={{ color: 'var(--gray-400)', fontSize: '0.8rem', textDecoration: 'none', marginLeft: '20px' }}>Admin</Link>
         </div>
       </footer>
 
