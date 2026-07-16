@@ -63,7 +63,7 @@ export default function AdminDashboard() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const storedPass = localStorage.getItem('bw_admin_password') || '1234';
+    const storedPass = localStorage.getItem('bw_admin_password') || '909035';
     if (password === storedPass) {
       setIsLoggedIn(true);
     } else {
