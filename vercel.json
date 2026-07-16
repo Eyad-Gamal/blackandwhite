@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 {
   "rewrites": [
     {
@@ -21,3 +22,17 @@
   ]
 }
 >>>>>>> 52cd5a054f5bc853badc945c305a53903af7ec50
+=======
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+>>>>>>> e0c2d3686b6247475d559e526f1c4154f92b5870
