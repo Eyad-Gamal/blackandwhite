@@ -40,12 +40,12 @@ export default function AdminDashboard() {
   async function fetchData() {
     try {
       const [resP, resC, resS, resH, resO, resCoupons] = await Promise.all([
-        fetch('/api/products').then(r => r.json()),
-        fetch('/api/categories').then(r => r.json()),
-        fetch('/api/settings').then(r => r.json()),
-        fetch('/api/hero').then(r => r.json()),
-        fetch('/api/overlay').then(r => r.json()),
-        fetch('/api/coupons').then(r => r.json())
+        fetch('/api/products', { cache: 'no-store' }).then(r => r.json()),
+        fetch('/api/categories', { cache: 'no-store' }).then(r => r.json()),
+        fetch('/api/settings', { cache: 'no-store' }).then(r => r.json()),
+        fetch('/api/hero', { cache: 'no-store' }).then(r => r.json()),
+        fetch('/api/overlay', { cache: 'no-store' }).then(r => r.json()),
+        fetch('/api/coupons', { cache: 'no-store' }).then(r => r.json())
       ]);
       if (Array.isArray(resP)) setProducts(resP);
       if (Array.isArray(resC)) setCategories(resC);

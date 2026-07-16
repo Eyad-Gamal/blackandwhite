@@ -47,7 +47,16 @@ export default function Storefront() {
       setOrderQuantity(1);
       setCheckoutStep(1);
     }
-  }, [selectedProduct]);
+  }, [selectedProduct?.id, selectedProduct?._id]); // Only reset when opening a DIFFERENT product, not when stock updates
+
+  useEffect(() => {
+    if (selectedProduct && products.length > 0) {
+      const updatedProduct = products.find(p => p._id === selectedProduct._id || p.id === selectedProduct.id);
+      if (updatedProduct && updatedProduct.stock !== selectedProduct.stock) {
+        setSelectedProduct(updatedProduct);
+      }
+    }
+  }, [products]);
 
   useEffect(() => {
     async function fetchData() {
