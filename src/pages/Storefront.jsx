@@ -53,11 +53,11 @@ export default function Storefront() {
     async function fetchData() {
       try {
         const [resP, resC, resS, resH, resO] = await Promise.all([
-          fetch('/api/products').then(r => r.json()),
-          fetch('/api/categories').then(r => r.json()),
-          fetch('/api/settings').then(r => r.json()),
-          fetch('/api/hero').then(r => r.json()),
-          fetch('/api/overlay').then(r => r.json())
+          fetch('/api/products', { cache: 'no-store' }).then(r => r.json()),
+          fetch('/api/categories', { cache: 'no-store' }).then(r => r.json()),
+          fetch('/api/settings', { cache: 'no-store' }).then(r => r.json()),
+          fetch('/api/hero', { cache: 'no-store' }).then(r => r.json()),
+          fetch('/api/overlay', { cache: 'no-store' }).then(r => r.json())
         ]);
 
         if (Array.isArray(resP)) {
@@ -80,9 +80,13 @@ export default function Storefront() {
       fetchData();
     };
     window.addEventListener('focus', handleFocus);
+    
+    // Auto-reload data every 10 seconds for real-time stock updates
+    const intervalId = setInterval(fetchData, 10000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
+      clearInterval(intervalId);
     };
   }, [i18n.language]);
 
@@ -211,7 +215,7 @@ export default function Storefront() {
       <header className="site-header" id="siteHeader">
         <div className="header-inner">
           <a href="#hero" className="header-logo" onClick={scrollToTop}>
-            <div className="logo-mark"><img src="/main-logo.jpeg" alt="Black & White" /></div>
+            <div className="logo-mark"><img src="/main-logo.jpeg" alt="Black & White" fetchpriority="high" /></div>
           </a>
           <nav className="header-nav">
             <a href="#hero" className="nav-link active">{t('header.home')}</a>
@@ -256,7 +260,7 @@ export default function Storefront() {
           <div className="search-results">
             {searchQuery && filteredProducts.map(p => (
                 <div key={p._id || p.name} className="search-result-card" onClick={() => { setSelectedProduct(p); setIsSearchOpen(false); }}>
-                    <img src={p.images?.[0]} alt={p.name} />
+                    <img src={p.images?.[0]} alt={p.name} loading="lazy" />
                     <h4>{p.name}</h4>
                 </div>
             ))}
@@ -275,13 +279,13 @@ export default function Storefront() {
         </div>
         <div className="hero-content">
           <div className="hero-text">
-            <img src="/main-logo.jpeg" alt="Black & White Logo" className="hero-text-logo" />
+            <img src="/main-logo.jpeg" alt="Black & White Logo" className="hero-text-logo" fetchpriority="high" />
             <h1 className="hero-headline" dangerouslySetInnerHTML={{ __html: (hero.headline?.[i18n.language] || hero.headline?.ar || hero.headline || t('hero.headline')).replace(hero.styledWord?.[i18n.language] || hero.styledWord?.ar || hero.styledWord || t('hero.styledWord'), `<span class="stroke-text">${hero.styledWord?.[i18n.language] || hero.styledWord?.ar || hero.styledWord || t('hero.styledWord')}</span><br>`) }}></h1>
             <p className="hero-tagline">{hero.tagline?.[i18n.language] || hero.tagline?.ar || hero.tagline || t('hero.tagline')}</p>
           </div>
           <div className="hero-visual">
             <div className="hero-main-img-wrapper">
-              <img src={hero.image || "/Gemini_Generated_Image_.png"} alt="Black & White Collection" id="heroImg" />
+              <img src={hero.image || "/Gemini_Generated_Image_.png"} alt="Black & White Collection" id="heroImg" fetchpriority="high" />
               <div className="hero-img-overlay"></div>
               <div className="hero-img-label">
                 <span className="hero-img-name">{hero.productLabel?.[i18n.language] || hero.productLabel?.ar || hero.productLabel || t('hero.productLabel')}</span>
@@ -437,10 +441,10 @@ export default function Storefront() {
           <div className="modal-container">
             <button className="modal-close" onClick={() => { setSelectedProduct(null); setAppliedCoupon(null); setCouponCode(''); setCouponError(''); }} aria-label="Close"><i className="fa-solid fa-xmark"></i></button>
             <div className="modal-image-panel">
-              <img src={selectedProduct.images?.[activeThumb]} className="modal-main-img" alt={selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name} />
+              <img src={selectedProduct.images?.[activeThumb]} className="modal-main-img" alt={selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name} fetchpriority="high" />
               <div className="modal-thumbs">
                   {selectedProduct.images?.map((img, idx) => (
-                      <img key={idx} src={img} alt="" className={`modal-thumb ${idx === activeThumb ? 'active' : ''}`} onClick={() => setActiveThumb(idx)} />
+                      <img key={idx} src={img} alt="" className={`modal-thumb ${idx === activeThumb ? 'active' : ''}`} onClick={() => setActiveThumb(idx)} loading="lazy" />
                   ))}
               </div>
             </div>
