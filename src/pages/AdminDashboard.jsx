@@ -72,34 +72,67 @@ export default function AdminDashboard() {
     }
   };
 
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleImageUpload = async (files) => {
     setUploading(true);
     const uploadedUrls = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const reader = new FileReader();
+      const compressedBase64 = await compressImage(file);
       const url = await new Promise((resolve) => {
-        reader.onloadend = async () => {
           try {
-            const res = await fetch('/api/upload', {
+            fetch('/api/upload', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ image: reader.result })
+              body: JSON.stringify({ image: compressedBase64 })
+            }).then(async res => {
+              if (!res.ok) {
+                  console.error("Upload failed with status", res.status);
+                  resolve(compressedBase64);
+                  return;
+              }
+              const data = await res.json();
+              resolve(data.url);
+            }).catch(error => {
+              console.error("Upload failed", error);
+              resolve(compressedBase64); // Fallback to base64
             });
-            if (!res.ok) {
-                console.error("Upload failed with status", res.status);
-                // Return base64 as fallback if Cloudinary fails (temporary workaround)
-                resolve(reader.result);
-                return;
-            }
-            const data = await res.json();
-            resolve(data.url);
           } catch (error) {
-            console.error("Upload failed", error);
-            resolve(reader.result); // Fallback to base64
+            resolve(compressedBase64);
           }
-        };
-        reader.readAsDataURL(file);
       });
       if (url) uploadedUrls.push(url);
     }
@@ -116,8 +149,7 @@ export default function AdminDashboard() {
       categoryId: formData.get('categoryId'),
       tag: formData.get('tag'),
       stock: Number(formData.get('stock')) || 0,
-      prices: {},
-      images: editingProduct?.images || []
+      prices: {}
     };
     const sizes = formData.getAll('size_name');
     const prices = formData.getAll('size_price');

@@ -371,9 +371,9 @@ export default function Storefront() {
                     <div style={{color:'var(--danger)', fontSize:'0.75rem', marginTop:'8px', fontWeight:'bold', display:'flex', alignItems:'center', gap:'4px'}}>
                       <i className="fa-solid fa-circle-xmark"></i> {i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock'}
                     </div>
-                  ) : p.stock <= 5 && p.stock > 0 ? (
+                  ) : p.stock > 0 ? (
                     <div style={{color:'var(--accent)', fontSize:'0.75rem', marginTop:'8px', fontWeight:'bold', display:'flex', alignItems:'center', gap:'4px'}}>
-                      <i className="fa-solid fa-clock" style={{animation:'glowPulse 1.5s infinite'}}></i> {i18n.language === 'ar' ? `أسرع! متبقي ${p.stock} فقط` : `Hurry! Only ${p.stock} left`}
+                      <i className="fa-solid fa-clock" style={{animation:'glowPulse 1.5s infinite'}}></i> {i18n.language === 'ar' ? `متبقي ${p.stock} قطعة` : `Only ${p.stock} left`}
                     </div>
                   ) : null}
                 </div>
@@ -469,10 +469,10 @@ export default function Storefront() {
                       <i className="fa-solid fa-circle-xmark"></i> 
                       <span>{i18n.language === 'ar' ? 'عذراً، هذا المنتج غير متوفر حالياً (نفذت الكمية)' : 'Sorry, this product is currently out of stock.'}</span>
                     </div>
-                  ) : selectedProduct.stock <= 5 && selectedProduct.stock > 0 ? (
+                  ) : selectedProduct.stock > 0 ? (
                     <div style={{background:'rgba(200, 169, 110, 0.1)', border:'1px solid var(--accent)', color:'var(--accent)', padding:'10px', borderRadius:'8px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'8px', fontWeight:'bold'}}>
                       <i className="fa-solid fa-clock" style={{animation:'glowPulse 1.5s infinite'}}></i> 
-                      <span>{i18n.language === 'ar' ? `أسرع! متبقي ${selectedProduct.stock} قطع فقط في المخزون` : `Hurry! Only ${selectedProduct.stock} pieces left in stock.`}</span>
+                      <span>{i18n.language === 'ar' ? `متبقي ${selectedProduct.stock} قطعة فقط في المخزون` : `Only ${selectedProduct.stock} pieces left in stock.`}</span>
                     </div>
                   ) : null}
                   
