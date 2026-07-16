@@ -56,7 +56,7 @@ export default function Storefront() {
         setSelectedProduct(updatedProduct);
       }
     }
-  }, [products]);
+  }, [products, selectedProduct]);
 
   useEffect(() => {
     async function fetchData() {
