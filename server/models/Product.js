@@ -8,6 +8,7 @@ const productSchema = new mongoose.Schema({
     },
     categoryId: { type: String, required: true },
     basePrice: { type: Number, default: 0 },
+    stock: { type: Number, default: 0 },
     prices: { type: Object, default: {} },
     sizes: [{
         size: String,

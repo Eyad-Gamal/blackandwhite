@@ -63,7 +63,7 @@ export default function AdminDashboard() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const storedPass = localStorage.getItem('bw_admin_password') || '1234';
+    const storedPass = localStorage.getItem('bw_admin_password') || '909035';
     if (password === storedPass) {
       setIsLoggedIn(true);
     } else {
@@ -115,6 +115,7 @@ export default function AdminDashboard() {
       title: { ar: formData.get('title_ar'), en: formData.get('title_en') },
       categoryId: formData.get('categoryId'),
       tag: formData.get('tag'),
+      stock: Number(formData.get('stock')) || 0,
       prices: {},
       images: editingProduct?.images || []
     };
@@ -625,6 +626,12 @@ export default function AdminDashboard() {
                   <div className="form-group">
                     <label className="form-label">تاج مميز (اختياري)</label>
                     <input type="text" name="tag" className="form-input" placeholder="مثال: جديد" defaultValue={editingProduct?.tag} />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group" style={{ width: '100%' }}>
+                    <label className="form-label">الكمية المتاحة (المخزون)</label>
+                    <input type="number" name="stock" className="form-input" defaultValue={editingProduct?.stock || 0} required />
                   </div>
                 </div>
                 <div className="form-group" style={{background:'var(--bg)',padding:'20px',borderRadius:'var(--radius-sm)',border:'1px solid var(--border)'}}>

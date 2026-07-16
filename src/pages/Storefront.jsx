@@ -31,10 +31,23 @@ export default function Storefront() {
   const [activeThumb, setActiveThumb] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [orderPhone, setOrderPhone] = useState('');
+  const [orderAddress, setOrderAddress] = useState('');
+  const [orderName, setOrderName] = useState('');
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [checkoutStep, setCheckoutStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setOrderAddress('');
+      setOrderName('');
+      setOrderQuantity(1);
+      setCheckoutStep(1);
+    }
+  }, [selectedProduct]);
 
   useEffect(() => {
     async function fetchData() {
@@ -137,21 +150,25 @@ export default function Storefront() {
         setAppliedCoupon(data);
       }
     } catch (e) {
-      setCouponError('حدث خطأ أثناء تفعيل الكود');
+      setCouponError(i18n.language === 'ar' ? 'حدث خطأ أثناء تفعيل الكود' : 'Error applying coupon');
     }
   };
 
-  const handleOrder = () => {
-    if(!selectedSize) {
-      alert(t('alert.selectSize'));
+  const handleOrder = async () => {
+    if(!orderName || orderName.trim() === '') {
+      alert(i18n.language === 'ar' ? 'برجاء إدخال الاسم' : 'Please enter your name');
       return;
     }
     if(!orderPhone || orderPhone.length < 10) {
       alert(t('alert.enterPhone'));
       return;
     }
+    if(!orderAddress || orderAddress.trim() === '') {
+      alert(i18n.language === 'ar' ? 'برجاء إدخال العنوان بالتفصيل' : 'Please enter your detailed address');
+      return;
+    }
 
-    let basePrice = selectedProduct.prices[selectedSize];
+    let basePrice = selectedProduct.prices[selectedSize] * orderQuantity;
     let finalPrice = basePrice;
     let couponText = '';
     if (appliedCoupon) {
@@ -163,8 +180,18 @@ export default function Storefront() {
         couponText = `\n${t('alert.whatsappCoupon')} ${appliedCoupon.code}\n${t('alert.whatsappDiscountPrice')} ${finalPrice} ${t('hero.currency')}`;
     }
 
+    try {
+      await fetch(`/api/products/${selectedProduct.id}/decrease-stock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: orderQuantity })
+      });
+    } catch (err) {
+      console.error(err);
+    }
+
     const pName = selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name;
-    const msg = `${t('alert.whatsappNewOrder')}\n${t('alert.whatsappProduct')} ${pName}\n${t('alert.whatsappSize')} ${selectedSize}\n${t('alert.whatsappBasePrice')} ${basePrice} ${t('hero.currency')}${couponText}\n${t('alert.whatsappPhone')} ${orderPhone}`;
+    const msg = `${t('alert.whatsappNewOrder')}\n${t('alert.whatsappProduct')} ${pName}\n${t('alert.whatsappSize')} ${selectedSize}\nQuantity: ${orderQuantity}\n${t('alert.whatsappBasePrice')} ${basePrice} ${t('hero.currency')}${couponText}\nName: ${orderName}\nPhone: ${orderPhone}\nAddress: ${orderAddress}`;
     const url = `https://wa.me/${settings.whatsappNumber || '201000000000'}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
     setShowSuccess(true);
@@ -193,8 +220,8 @@ export default function Storefront() {
             <a href="#footer" className="nav-link">{t('header.contact')}</a>
           </nav>
           <div className="header-actions">
-            <button className="header-icon-btn lang-btn" onClick={toggleLanguage} aria-label="Toggle Language" style={{ fontSize: '0.9rem', fontWeight: 'bold', border: '1px solid var(--border-light)', borderRadius: '4px', padding: '4px 8px', background: 'transparent', color: 'var(--white)', cursor: 'pointer' }}>
-              {i18n.language === 'ar' ? 'EN' : 'AR'}
+            <button className="header-icon-btn lang-btn" onClick={toggleLanguage} aria-label="Toggle Language" style={{ fontSize: '0.9rem', fontWeight: 'bold', border: '1px solid var(--accent)', borderRadius: '4px', padding: '4px 8px', background: 'rgba(200, 169, 110, 0.05)', color: 'var(--accent)', cursor: 'pointer' }}>
+              {i18n.language === 'ar' ? 'EN' : 'عربي'}
             </button>
             <button className="header-icon-btn" onClick={() => setIsSearchOpen(true)} aria-label={t('header.search')}>
               <i className="fa-solid fa-magnifying-glass"></i>
@@ -308,7 +335,11 @@ export default function Storefront() {
             const pCat = categories.find(c => c.name?.ar === pCatOriginal || c.name === pCatOriginal)?.name?.[i18n.language] || pCatOriginal;
             return (
               <div key={p._id || idx} className="product-card animate-in visible" style={{ transitionDelay: `${idx * 0.06}s` }} onClick={() => { setSelectedProduct(p); setActiveThumb(0); setSelectedSize(''); setShowSuccess(false); }}>
-                {p.tag && <div className={`product-tag ${p.tag === 'جديد' ? 'new-tag' : ''}`}>{p.tag === 'جديد' ? t('productCard.new') : p.tag}</div>}
+                {p.stock <= 0 ? (
+                  <div className="product-tag" style={{background: 'var(--danger)', color: 'white'}}>{i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock'}</div>
+                ) : p.tag ? (
+                  <div className={`product-tag ${p.tag === 'جديد' ? 'new-tag' : ''}`}>{p.tag === 'جديد' ? t('productCard.new') : p.tag}</div>
+                ) : null}
                 <div className="product-img-wrapper">
                   <img src={p.images?.[0]} alt={pName} loading="lazy" />
                   <div className="product-img-overlay"></div>
@@ -323,6 +354,15 @@ export default function Storefront() {
                       {Object.keys(p.prices || {}).slice(0, 3).map(s => <div key={s} className="size-dot">{s}</div>)}
                     </div>
                   </div>
+                  {p.stock <= 0 ? (
+                    <div style={{color:'var(--danger)', fontSize:'0.75rem', marginTop:'8px', fontWeight:'bold', display:'flex', alignItems:'center', gap:'4px'}}>
+                      <i className="fa-solid fa-circle-xmark"></i> {i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock'}
+                    </div>
+                  ) : p.stock <= 5 && p.stock > 0 ? (
+                    <div style={{color:'var(--accent)', fontSize:'0.75rem', marginTop:'8px', fontWeight:'bold', display:'flex', alignItems:'center', gap:'4px'}}>
+                      <i className="fa-solid fa-clock" style={{animation:'glowPulse 1.5s infinite'}}></i> {i18n.language === 'ar' ? `أسرع! متبقي ${p.stock} فقط` : `Hurry! Only ${p.stock} left`}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             );
@@ -388,7 +428,6 @@ export default function Storefront() {
           <p style={{ fontSize: '0.75rem', color: 'var(--gray-mid)' }}>
             © 2026 <strong style={{ color: 'var(--white)' }}>Black & White</strong> — {t('footer.copy')}
           </p>
-          <Link to="/admin" style={{ color: 'var(--gray-400)', fontSize: '0.8rem', textDecoration: 'none', marginLeft: '20px' }}>Admin</Link>
         </div>
       </footer>
 
@@ -406,54 +445,103 @@ export default function Storefront() {
               </div>
             </div>
             <div className="modal-info-panel">
-              <p className="modal-category">{categories.find(c => c.name?.ar === (selectedProduct.categoryId || selectedProduct.category) || c.name === (selectedProduct.categoryId || selectedProduct.category))?.name?.[i18n.language] || (selectedProduct.categoryId || selectedProduct.category)}</p>
-              <h2 className="modal-title">{selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name}</h2>
-              <p className="modal-tagline">{t('products.sub')}</p>
-              
-              <div id="sizeSection">
-                <p className="modal-label">{t('modal.chooseSize')}</p>
-                <div className="modal-size-options">
-                    {Object.keys(selectedProduct.prices || {}).map(s => (
-                        <button key={s} className={`size-btn ${selectedSize === s ? 'active' : ''}`} onClick={() => setSelectedSize(s)}>{s}</button>
-                    ))}
-                </div>
-              </div>
-              <div className="modal-price-block">
-                <p className="modal-label">{t('hero.price')}</p>
-                <div style={{display:'flex',flexDirection:'column'}}>
-                  <p className="modal-price" style={{ textDecoration: appliedCoupon ? 'line-through' : 'none', color: appliedCoupon ? '#999' : 'inherit', fontSize: appliedCoupon ? '1.2rem' : '1.75rem' }}>
-                    {selectedSize ? selectedProduct.prices[selectedSize] : Math.min(...Object.values(selectedProduct.prices || {}))} <span className="currency">{t('hero.currency')}</span>
-                  </p>
-                  {appliedCoupon && (
-                    <p className="modal-price" style={{ color: '#000', marginTop: '4px' }}>
-                      {(() => {
-                        let bp = selectedSize ? selectedProduct.prices[selectedSize] : Math.min(...Object.values(selectedProduct.prices || {}));
-                        let fp = appliedCoupon.type === 'percentage' ? bp - (bp * (appliedCoupon.value / 100)) : Math.max(0, bp - appliedCoupon.value);
-                        return fp;
-                      })()} <span className="currency">{t('hero.currency')}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div style={{marginBottom:'24px'}}>
-                <div style={{display:'flex',gap:'8px'}}>
-                  <input type="text" placeholder={t('modal.coupon')} value={couponCode} onChange={e => setCouponCode(e.target.value)} style={{flex:1,padding:'12px 16px',border:'1px solid var(--border-subtle)',borderRadius:'8px',textTransform:'uppercase',background:'var(--bg)',color:'var(--white)',outline:'none',fontSize:'0.9rem'}} />
-                  <button onClick={handleApplyCoupon} style={{background:'var(--white)',color:'var(--bg)',border:'none',padding:'0 20px',borderRadius:'8px',cursor:'pointer',fontWeight:'bold'}}>{t('modal.applyCoupon')}</button>
-                </div>
-                {couponError && <p style={{color:'var(--danger)',fontSize:'0.8rem',marginTop:'6px'}}>{couponError}</p>}
-                {appliedCoupon && <p style={{color:'var(--success)',fontSize:'0.8rem',marginTop:'6px'}}>{t('modal.couponApplied')}</p>}
-              </div>
-              <div className="modal-phone-wrapper">
-                <i className="fa-solid fa-phone phone-icon"></i>
-                <input type="tel" className="modal-phone" placeholder={t('modal.phonePlaceholder')} maxLength="11" value={orderPhone} onChange={(e) => setOrderPhone(e.target.value)} />
-              </div>
-              <button onClick={handleOrder} className="modal-order-btn">
-                <i className="fa-brands fa-whatsapp wa-icon"></i> {t('modal.orderBtn')}
-              </button>
-              {showSuccess && (
-                  <div className="modal-success visible">
-                    <i className="fa-solid fa-circle-check"></i> {t('modal.orderSuccess')}
+              {checkoutStep === 1 ? (
+                <>
+                  <p className="modal-category">{categories.find(c => c.name?.ar === (selectedProduct.categoryId || selectedProduct.category) || c.name === (selectedProduct.categoryId || selectedProduct.category))?.name?.[i18n.language] || (selectedProduct.categoryId || selectedProduct.category)}</p>
+                  <h2 className="modal-title">{selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name}</h2>
+                  <p className="modal-tagline">{t('products.sub')}</p>
+                  
+                  {selectedProduct.stock <= 0 ? (
+                    <div style={{background:'var(--danger-bg)', border:'1px solid var(--danger)', color:'var(--danger)', padding:'10px', borderRadius:'8px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'8px', fontWeight:'bold'}}>
+                      <i className="fa-solid fa-circle-xmark"></i> 
+                      <span>{i18n.language === 'ar' ? 'عذراً، هذا المنتج غير متوفر حالياً (نفذت الكمية)' : 'Sorry, this product is currently out of stock.'}</span>
+                    </div>
+                  ) : selectedProduct.stock <= 5 && selectedProduct.stock > 0 ? (
+                    <div style={{background:'rgba(200, 169, 110, 0.1)', border:'1px solid var(--accent)', color:'var(--accent)', padding:'10px', borderRadius:'8px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'8px', fontWeight:'bold'}}>
+                      <i className="fa-solid fa-clock" style={{animation:'glowPulse 1.5s infinite'}}></i> 
+                      <span>{i18n.language === 'ar' ? `أسرع! متبقي ${selectedProduct.stock} قطع فقط في المخزون` : `Hurry! Only ${selectedProduct.stock} pieces left in stock.`}</span>
+                    </div>
+                  ) : null}
+                  
+                  <div id="sizeSection">
+                    <p className="modal-label">{t('modal.chooseSize')}</p>
+                    <div className="modal-size-options">
+                        {Object.keys(selectedProduct.prices || {}).map(s => (
+                            <button key={s} className={`size-btn ${selectedSize === s ? 'active' : ''}`} onClick={() => setSelectedSize(s)}>{s}</button>
+                        ))}
+                    </div>
                   </div>
+                  <div className="modal-price-block">
+                    <p className="modal-label">{t('hero.price')}</p>
+                    <div style={{display:'flex',flexDirection:'column'}}>
+                      <p className="modal-price" style={{ textDecoration: appliedCoupon ? 'line-through' : 'none', color: appliedCoupon ? '#999' : 'inherit', fontSize: appliedCoupon ? '1.2rem' : '1.75rem' }}>
+                        {selectedSize ? selectedProduct.prices[selectedSize] : Math.min(...Object.values(selectedProduct.prices || {}))} <span className="currency">{t('hero.currency')}</span>
+                      </p>
+                      {appliedCoupon && (
+                        <p className="modal-price" style={{ color: '#000', marginTop: '4px' }}>
+                          {(() => {
+                            let bp = selectedSize ? selectedProduct.prices[selectedSize] : Math.min(...Object.values(selectedProduct.prices || {}));
+                            let fp = appliedCoupon.type === 'percentage' ? bp - (bp * (appliedCoupon.value / 100)) : Math.max(0, bp - appliedCoupon.value);
+                            return fp;
+                          })()} <span className="currency">{t('hero.currency')}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{marginBottom:'24px'}}>
+                    <div style={{display:'flex',gap:'8px'}}>
+                      <input type="text" placeholder={t('modal.coupon')} value={couponCode} onChange={e => setCouponCode(e.target.value)} style={{flex:1,padding:'12px 16px',border:'1px solid var(--border-subtle)',borderRadius:'8px',textTransform:'uppercase',background:'var(--bg)',color:'var(--white)',outline:'none',fontSize:'0.9rem'}} />
+                      <button onClick={handleApplyCoupon} style={{background:'var(--white)',color:'var(--bg)',border:'none',padding:'0 20px',borderRadius:'8px',cursor:'pointer',fontWeight:'bold'}}>{t('modal.applyCoupon')}</button>
+                    </div>
+                    {couponError && <p style={{color:'var(--danger)',fontSize:'0.8rem',marginTop:'6px'}}>{couponError}</p>}
+                    {appliedCoupon && <p style={{color:'var(--success)',fontSize:'0.8rem',marginTop:'6px'}}>{t('modal.couponApplied')}</p>}
+                  </div>
+                  
+                  <div className="modal-quantity-wrapper" style={{marginBottom:'24px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <label style={{color: 'var(--gray-light)', fontSize: '0.9rem', fontWeight: 'bold'}}>{i18n.language === 'ar' ? 'الكمية:' : 'Quantity:'}</label>
+                    <input type="number" min="1" max={selectedProduct.stock || 100} value={orderQuantity} onChange={(e) => setOrderQuantity(Number(e.target.value))} style={{width: '80px', padding: '8px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', textAlign: 'center', fontFamily: 'inherit'}} />
+                  </div>
+                  
+                  <button onClick={() => {
+                    if(!selectedSize) { alert(t('alert.selectSize')); return; }
+                    if(orderQuantity < 1) { alert(i18n.language === 'ar' ? 'الكمية غير صحيحة' : 'Invalid quantity'); return; }
+                    setCheckoutStep(2);
+                  }} className="modal-order-btn" style={{ opacity: selectedProduct.stock <= 0 ? 0.5 : 1, cursor: selectedProduct.stock <= 0 ? 'not-allowed' : 'pointer' }} disabled={selectedProduct.stock <= 0}>
+                    {selectedProduct.stock <= 0 ? (i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock') : (i18n.language === 'ar' ? 'متابعة الطلب' : 'Continue Order')}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setCheckoutStep(1)} style={{background:'none',border:'none',color:'var(--gray-light)',cursor:'pointer',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}>
+                    <i className={i18n.language === 'ar' ? "fa-solid fa-arrow-right" : "fa-solid fa-arrow-left"}></i> {i18n.language === 'ar' ? 'رجوع' : 'Back'}
+                  </button>
+                  <h3 style={{marginBottom:'24px', color:'var(--white)'}}>{i18n.language === 'ar' ? 'بيانات الاستلام' : 'Delivery Details'}</h3>
+                  
+                  <div className="modal-name-wrapper" style={{marginBottom:'12px', position: 'relative'}}>
+                    <i className="fa-solid fa-user" style={{position: 'absolute', right: i18n.language === 'ar' ? '16px' : 'auto', left: i18n.language === 'ar' ? 'auto' : '16px', top: '14px', color: 'var(--accent)'}}></i>
+                    <input type="text" placeholder={i18n.language === 'ar' ? 'الاسم ثلاثي' : 'Full Name'} value={orderName} onChange={(e) => setOrderName(e.target.value)} style={{width: '100%', padding: '12px 16px', paddingRight: i18n.language === 'ar' ? '44px' : '16px', paddingLeft: i18n.language === 'ar' ? '16px' : '44px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', fontFamily: 'inherit'}} />
+                  </div>
+                  
+                  <div className="modal-phone-wrapper" style={{marginBottom:'12px'}}>
+                    <i className="fa-solid fa-phone phone-icon"></i>
+                    <input type="tel" className="modal-phone" placeholder={t('modal.phonePlaceholder')} maxLength="11" value={orderPhone} onChange={(e) => setOrderPhone(e.target.value)} />
+                  </div>
+                  
+                  <div className="modal-address-wrapper" style={{marginBottom:'24px', position: 'relative'}}>
+                    <i className="fa-solid fa-location-dot" style={{position: 'absolute', right: i18n.language === 'ar' ? '16px' : 'auto', left: i18n.language === 'ar' ? 'auto' : '16px', top: '14px', color: 'var(--accent)'}}></i>
+                    <input type="text" className="modal-address" placeholder={i18n.language === 'ar' ? 'العنوان بالتفصيل' : 'Detailed Address'} value={orderAddress} onChange={(e) => setOrderAddress(e.target.value)} style={{width: '100%', padding: '12px 16px', paddingRight: i18n.language === 'ar' ? '44px' : '16px', paddingLeft: i18n.language === 'ar' ? '16px' : '44px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', fontFamily: 'inherit'}} />
+                  </div>
+                  
+                  <button onClick={handleOrder} className="modal-order-btn">
+                    <i className="fa-brands fa-whatsapp wa-icon"></i> {i18n.language === 'ar' ? 'تأكيد الطلب عبر واتساب' : 'Confirm Order via WhatsApp'}
+                  </button>
+                  
+                  {showSuccess && (
+                      <div className="modal-success visible">
+                        <i className="fa-solid fa-circle-check"></i> {t('modal.orderSuccess')}
+                      </div>
+                  )}
+                </>
               )}
             </div>
           </div>

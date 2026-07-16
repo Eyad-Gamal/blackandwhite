@@ -287,7 +287,6 @@
         }
 
         .header-logo:hover .logo-mark {
-            box-shadow: 0 0 0 2px var(--accent);
             transform: scale(1.05);
         }
 
@@ -854,7 +853,7 @@
             max-width: 1400px;
             padding: 120px 40px 80px;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 2fr;
             gap: 4px;
             align-items: stretch;
         }
@@ -862,12 +861,10 @@
         .hero-text {
             position: relative;
             z-index: 10;
-            background: rgba(8, 8, 8, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: transparent !important;
             padding: 40px;
             border-radius: var(--radius-lg);
-            border: 1px solid var(--border-light);
+            border: none;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -880,8 +877,6 @@
 
         .hero-text:hover {
             transform: translateY(-4px);
-            border-color: rgba(200, 169, 110, 0.4);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6), inset 0 0 30px rgba(200,169,110,0.03);
         }
 
         .hero-text-logo {
@@ -890,13 +885,11 @@
             max-width: 400px;
             height: auto;
             margin: 0 auto 20px;
-            filter: drop-shadow(0 4px 16px rgba(200, 169, 110, 0.25));
             animation: fadeIn 1.2s ease;
-            transition: filter 0.4s ease, transform 0.4s ease;
+            transition: transform 0.4s ease;
         }
 
         .hero-text:hover .hero-text-logo {
-            filter: drop-shadow(0 8px 24px rgba(200, 169, 110, 0.4));
             transform: translateY(-2px) scale(1.02);
         }
 
@@ -2065,9 +2058,10 @@
         /* ===== RESPONSIVE ===== */
         @media (max-width:1024px) {
             .hero-content {
-                grid-template-columns: 1fr;
-                padding: 100px 28px 60px;
-                gap: 40px;
+                grid-template-columns: 1fr 2fr;
+                padding: 100px 16px 60px;
+                gap: 16px;
+                align-items: center;
             }
 
             .hero-text {
@@ -2077,12 +2071,17 @@
                 transform: none;
                 max-width: 100%;
                 text-align: center;
-                margin-bottom: 30px;
+                margin-bottom: 0;
+                padding: 0;
             }
 
             .hero-visual {
                 max-width: 100%;
                 margin: 0 auto;
+            }
+
+            .hero-headline {
+                font-size: 2rem;
             }
 
             .hero-main-img-wrapper {

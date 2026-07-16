@@ -39,6 +39,29 @@ router.delete('/products/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+router.post('/products/:id/decrease-stock', async (req, res) => {
+    try {
+        const { quantity } = req.body;
+        const product = await Product.findOne({ id: req.params.id });
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+        
+        if (product.stock && product.stock >= quantity) {
+            product.stock -= quantity;
+            await product.save();
+            res.json(product);
+        } else if (product.stock !== undefined) {
+            // Deduct whatever is left or just go to 0
+            product.stock = Math.max(0, product.stock - quantity);
+            await product.save();
+            res.json(product);
+        } else {
+            res.json(product); // No stock tracking
+        }
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // --- Categories ---
 router.get('/categories', async (req, res) => {
     try {
