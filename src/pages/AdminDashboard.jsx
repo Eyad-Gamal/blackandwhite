@@ -27,6 +27,7 @@ export default function AdminDashboard() {
   const [editingCoupon, setEditingCoupon] = useState(null);
 
   const [uploading, setUploading] = useState(false);
+  const [draggedProductIdx, setDraggedProductIdx] = useState(null);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -140,6 +141,48 @@ export default function AdminDashboard() {
     return uploadedUrls;
   };
 
+  // --- Drag & Drop Reordering ---
+  const handleDragStart = (e, index) => {
+    setDraggedProductIdx(index);
+    e.dataTransfer.effectAllowed = "move";
+    setTimeout(() => { e.target.style.opacity = '0.5'; }, 0);
+  };
+
+  const handleDragEnd = (e) => {
+    if (e.target && e.target.style) {
+      e.target.style.opacity = '1';
+    }
+    setDraggedProductIdx(null);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e, index) => {
+    e.preventDefault();
+    if (draggedProductIdx === null || draggedProductIdx === index) return;
+    
+    const newProducts = [...products];
+    const item = newProducts.splice(draggedProductIdx, 1)[0];
+    newProducts.splice(index, 0, item);
+    
+    const updatedProducts = newProducts.map((p, i) => ({ ...p, order: i }));
+    setProducts(updatedProducts);
+    
+    try {
+      await Promise.all(updatedProducts.map((p) => {
+        return fetch(`/api/products/${p.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: p.order })
+        });
+      }));
+    } catch (err) {
+      console.error("Error updating order:", err);
+    }
+  };
+
   // --- CRUD Functions ---
   const saveProduct = async (e) => {
     e.preventDefault();
@@ -149,6 +192,7 @@ export default function AdminDashboard() {
       categoryId: formData.get('categoryId'),
       tag: formData.get('tag'),
       stock: Number(formData.get('stock')) || 0,
+      order: Number(formData.get('order')) || 0,
       prices: {}
     };
     const sizes = formData.getAll('size_name');
@@ -389,14 +433,24 @@ export default function AdminDashboard() {
                     <div className="card-header"><h3 className="card-title"><i className="fa-solid fa-shirt"></i> قائمة المنتجات</h3></div>
                     <div style={{overflowX: 'auto'}}>
                       <table className="data-table">
-                        <thead><tr><th>الصورة</th><th>الاسم</th><th>التصنيف</th><th>السعر الأساسي</th><th>الإجراءات</th></tr></thead>
+                        <thead><tr><th></th><th>الصورة</th><th>الاسم</th><th>التصنيف</th><th>السعر الأساسي</th><th>الترتيب</th><th>الإجراءات</th></tr></thead>
                         <tbody>
-                          {products.map(p => (
-                            <tr key={p._id || p.id}>
+                          {products.map((p, idx) => (
+                            <tr 
+                              key={p._id || p.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, idx)}
+                              onDragEnd={handleDragEnd}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, idx)}
+                              style={{ cursor: 'move', backgroundColor: draggedProductIdx === idx ? 'var(--bg-elevated)' : 'transparent', transition: 'background-color 0.2s' }}
+                            >
+                              <td style={{ color: 'var(--gray-mid)', textAlign: 'center', cursor: 'grab' }}><i className="fa-solid fa-grip-vertical"></i></td>
                               <td><img src={p.images?.[0]} className="product-thumb" alt=""/></td>
                               <td>{p.title?.ar || p.title || p.name}</td>
                               <td><span className="tag tag-accent">{p.categoryId || p.category}</span></td>
                               <td style={{color:'var(--accent)',fontWeight:700}}>{Math.min(...Object.values(p.prices || {}))} ج.م</td>
+                              <td>{p.order || 0}</td>
                               <td>
                                 <div className="actions-cell">
                                   <button type="button" className="btn btn-outline btn-icon" onClick={() => {setEditingProduct(p); setIsProductModalOpen(true);}}><i className="fa-solid fa-pen"></i></button>
@@ -664,6 +718,10 @@ export default function AdminDashboard() {
                   <div className="form-group" style={{ width: '100%' }}>
                     <label className="form-label">الكمية المتاحة (المخزون)</label>
                     <input type="number" name="stock" className="form-input" defaultValue={editingProduct?.stock || 0} required />
+                  </div>
+                  <div className="form-group" style={{ width: '100%' }}>
+                    <label className="form-label">ترتيب الظهور (الأقل يظهر أولاً)</label>
+                    <input type="number" name="order" className="form-input" defaultValue={editingProduct?.order || 0} />
                   </div>
                 </div>
                 <div className="form-group" style={{background:'var(--bg)',padding:'20px',borderRadius:'var(--radius-sm)',border:'1px solid var(--border)'}}>

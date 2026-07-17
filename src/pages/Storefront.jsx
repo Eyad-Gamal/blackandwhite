@@ -23,6 +23,7 @@ export default function Storefront() {
   const [hero, setHero] = useState({});
   const [overlay, setOverlay] = useState({});
   const [activeFilter, setActiveFilter] = useState('all');
+  const [activeSort, setActiveSort] = useState('default');
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -119,6 +120,17 @@ export default function Storefront() {
     const matchCategory = activeFilter === 'all' || pCat === activeCatFilter || pCat === activeFilter;
     const matchSearch = pName.toLowerCase().includes(searchQuery.toLowerCase()) || pCat.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCategory && matchSearch;
+  }).sort((a, b) => {
+    if (activeSort === 'price_asc') {
+      const minA = Math.min(...Object.values(a.prices || {}));
+      const minB = Math.min(...Object.values(b.prices || {}));
+      return minA - minB;
+    } else if (activeSort === 'price_desc') {
+      const minA = Math.min(...Object.values(a.prices || {}));
+      const minB = Math.min(...Object.values(b.prices || {}));
+      return minB - minA;
+    }
+    return 0; // Default uses backend order
   });
 
   const getOverlayCSS = () => {
@@ -333,12 +345,24 @@ export default function Storefront() {
           <h2 className="section-title">{t('products.title')}</h2>
           <p className="section-sub">{t('products.sub')}</p>
         </div>
-        <div className="filter-bar">
-          <button className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>{t('products.filterAll')}</button>
-          {categories.map(cat => {
-            const catNameStr = cat.name?.[i18n.language] || cat.name?.ar || cat.name;
-            return <button key={cat._id || cat.id || catNameStr} className={`filter-btn ${activeFilter === catNameStr ? 'active' : ''}`} onClick={() => setActiveFilter(catNameStr)}>{catNameStr}</button>;
-          })}
+        <div className="filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>{t('products.filterAll')}</button>
+            {categories.map(cat => {
+              const catNameStr = cat.name?.[i18n.language] || cat.name?.ar || cat.name;
+              return <button key={cat._id || cat.id || catNameStr} className={`filter-btn ${activeFilter === catNameStr ? 'active' : ''}`} onClick={() => setActiveFilter(catNameStr)}>{catNameStr}</button>;
+            })}
+          </div>
+          <select 
+            value={activeSort} 
+            onChange={(e) => setActiveSort(e.target.value)}
+            className="form-select"
+            style={{ width: 'auto', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', color: 'var(--white)', padding: '8px 16px', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="default">{i18n.language === 'ar' ? 'الترتيب الافتراضي' : 'Default Sort'}</option>
+            <option value="price_asc">{i18n.language === 'ar' ? 'السعر: من الأقل للأعلى' : 'Price: Low to High'}</option>
+            <option value="price_desc">{i18n.language === 'ar' ? 'السعر: من الأعلى للأقل' : 'Price: High to Low'}</option>
+          </select>
         </div>
         <div className="products-grid">
           {filteredProducts.map((p, idx) => {
