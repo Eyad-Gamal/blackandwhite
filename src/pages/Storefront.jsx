@@ -308,7 +308,7 @@ export default function Storefront() {
           <div className="search-results">
             {searchQuery && filteredProducts.map(p => (
               <div key={p._id || p.name} className="search-result-card" onClick={() => { setSelectedProduct(p); setIsSearchOpen(false); }}>
-                <img src={p.images?.[0]} alt={p.name} loading="lazy" />
+                <img src={optimizeImageUrl(p.images?.[0], { context: 'thumbnail' })} alt={p.name} loading="lazy" />
                 <h4>{p.name}</h4>
               </div>
             ))}
