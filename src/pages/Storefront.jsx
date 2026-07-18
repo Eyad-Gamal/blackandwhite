@@ -1,13 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
-const optimizeImage = (url) => {
-  if (url && url.includes('cloudinary.com') && !url.includes('q_auto')) {
-    return url.replace('/upload/', '/upload/q_auto,f_auto,w_800/');
-  }
-  return url;
-};
+import { clientCache } from '../utils/clientCache.js';
+import { ProductGridSkeleton, HeroSkeleton, CategoryFilterSkeleton } from '../components/SkeletonLoader.jsx';
+import { optimizeImageUrl, getLazyLoading, getImagePriority } from '../utils/imageOptimizer.js';
 
 export default function Storefront() {
   const { t, i18n } = useTranslation();
@@ -24,6 +20,9 @@ export default function Storefront() {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [settings, setSettings] = useState({});
@@ -69,9 +68,31 @@ export default function Storefront() {
   useEffect(() => {
     async function fetchData() {
       try {
+        setError(null);
+        const cached = clientCache.get('storefront');
+        if (cached && cached.data) {
+          const data = cached.data;
+          if (Array.isArray(data.products)) {
+              setProducts(data.products.map(p => ({
+                  ...p,
+                  prices: p.prices || (p.sizes ? p.sizes.reduce((acc, s) => ({...acc, [s.size]: s.price}), {}) : {})
+              })));
+          }
+          if (Array.isArray(data.categories)) setCategories(data.categories);
+          if (data.settings && data.settings._id) setSettings(data.settings);
+          if (data.hero && data.hero._id) setHero(data.hero);
+          if (data.overlay && data.overlay._id) setOverlay(data.overlay);
+          
+          setIsLoading(false);
+          // If cached data is fresh (less than 150 seconds old), don't fetch again
+          if (cached.age < 150) return;
+        }
+
         const res = await fetch('/api/storefront-data', { cache: 'no-store' });
         if (!res.ok) throw new Error('Failed to fetch data');
         const data = await res.json();
+        
+        clientCache.set('storefront', data, 300);
 
         if (Array.isArray(data.products)) {
             setProducts(data.products.map(p => ({
@@ -83,21 +104,27 @@ export default function Storefront() {
         if (data.settings && data.settings._id) setSettings(data.settings);
         if (data.hero && data.hero._id) setHero(data.hero);
         if (data.overlay && data.overlay._id) setOverlay(data.overlay);
+        
+        setIsLoading(false);
       } catch (e) {
         console.error("API Error:", e);
+        const cached = clientCache.get('storefront');
+        if (cached && cached.data) {
+            // We already populated from stale cache, just hide loading
+            setIsLoading(false);
+        } else {
+            if (retryCount === 0) {
+                // Auto retry once after 1s
+                setTimeout(() => setRetryCount(1), 1000);
+            } else {
+                setError(e.message || 'Network error');
+                setIsLoading(false);
+            }
+        }
       }
     }
     fetchData();
-
-    const handleFocus = () => {
-      fetchData();
-    };
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [i18n.language]);
+  }, [retryCount]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -290,8 +317,20 @@ export default function Storefront() {
           </div>
         </div>
       </div>
+      
+      {/* ERROR BANNER */}
+      {error && (
+        <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '16px', textAlign: 'center', borderBottom: '1px solid var(--danger)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', position: 'sticky', top: '70px', zIndex: 90 }}>
+          <i className="fa-solid fa-circle-exclamation"></i>
+          <span>{i18n.language === 'ar' ? 'عذراً، حدث خطأ أثناء تحميل البيانات.' : 'Sorry, an error occurred while loading data.'}</span>
+          <button onClick={() => { setIsLoading(true); setError(null); setRetryCount(0); }} style={{ background: 'var(--danger)', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            <i className="fa-solid fa-rotate-right"></i> {i18n.language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+          </button>
+        </div>
+      )}
 
       {/* ===== HERO ===== */}
+      {isLoading ? <HeroSkeleton /> : (
       <section className="hero" id="hero">
         <div className="hero-bg-split">
           <div className="bg-left"></div>
@@ -305,7 +344,7 @@ export default function Storefront() {
           </div>
           <div className="hero-visual">
             <div className="hero-main-img-wrapper">
-              <img src={hero.image || "/Gemini_Generated_Image_.png"} alt="Black & White Collection" id="heroImg" fetchpriority="high" />
+              <img src={optimizeImageUrl(hero.image || "/Gemini_Generated_Image_.png", { context: 'hero' })} alt="Black & White Collection" id="heroImg" fetchpriority="high" />
               <div className="hero-img-overlay"></div>
               <div className="hero-img-label">
                 <span className="hero-img-name">{hero.productLabel?.[i18n.language] || hero.productLabel?.ar || hero.productLabel || t('hero.productLabel')}</span>
@@ -316,6 +355,7 @@ export default function Storefront() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ===== ANNOUNCEMENT BAR ===== */}
       <div className="announcement-bar">
@@ -344,6 +384,7 @@ export default function Storefront() {
           <h2 className="section-title">{t('products.title')}</h2>
           <p className="section-sub">{t('products.sub')}</p>
         </div>
+        {isLoading ? <CategoryFilterSkeleton /> : (
         <div className="filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>{t('products.filterAll')}</button>
@@ -363,6 +404,8 @@ export default function Storefront() {
             <option value="price_desc">{i18n.language === 'ar' ? 'السعر: من الأعلى للأقل' : 'Price: High to Low'}</option>
           </select>
         </div>
+        )}
+        {isLoading ? <ProductGridSkeleton count={8} /> : (
         <div className="products-grid">
           {filteredProducts.map((p, idx) => {
             const minP = Math.min(...Object.values(p.prices || {}));
@@ -377,7 +420,7 @@ export default function Storefront() {
                   <div className={`product-tag ${p.tag === 'جديد' ? 'new-tag' : ''}`}>{p.tag === 'جديد' ? t('productCard.new') : p.tag}</div>
                 ) : null}
                 <div className="product-img-wrapper">
-                  <img src={optimizeImage(p.images?.[0])} alt={pName} loading="lazy" />
+                  <img src={optimizeImageUrl(p.images?.[0], { context: 'grid' })} alt={pName} loading={getLazyLoading(idx)} fetchpriority={getImagePriority(idx)} />
                   <div className="product-img-overlay"></div>
                   <button className="product-quick-btn" onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); setActiveThumb(0); setSelectedSize(''); setShowSuccess(false); }}>{t('productCard.quickView')}</button>
                 </div>
@@ -473,10 +516,10 @@ export default function Storefront() {
           <div className="modal-container">
             <button className="modal-close" onClick={() => { setSelectedProduct(null); setAppliedCoupon(null); setCouponCode(''); setCouponError(''); }} aria-label="Close"><i className="fa-solid fa-xmark"></i></button>
             <div className="modal-image-panel">
-              <img src={selectedProduct.images?.[activeThumb]} className="modal-main-img" alt={selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name} fetchpriority="high" />
+              <img src={optimizeImageUrl(selectedProduct.images?.[activeThumb], { context: 'modal' })} className="modal-main-img" alt={selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name} fetchpriority="high" />
               <div className="modal-thumbs">
                   {selectedProduct.images?.map((img, idx) => (
-                      <img key={idx} src={optimizeImage(img)} alt="" className={`modal-thumb ${idx === activeThumb ? 'active' : ''}`} onClick={() => setActiveThumb(idx)} loading="lazy" />
+                      <img key={idx} src={optimizeImageUrl(img, { context: 'thumbnail' })} alt="" className={`modal-thumb ${idx === activeThumb ? 'active' : ''}`} onClick={() => setActiveThumb(idx)} loading="lazy" />
                   ))}
               </div>
             </div>

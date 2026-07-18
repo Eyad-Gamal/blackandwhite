@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import adminCssString from '../admin.css?raw';
+import { optimizeImageUrl } from '../utils/imageOptimizer.js';
+import { clientCache } from '../utils/clientCache.js';
 
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -40,6 +42,18 @@ export default function AdminDashboard() {
 
   async function fetchData() {
     try {
+      const cached = clientCache.get('admin_dashboard');
+      if (cached && cached.data) {
+        const { resP, resC, resS, resH, resO, resCoupons } = cached.data;
+        if (Array.isArray(resP)) setProducts(resP);
+        if (Array.isArray(resC)) setCategories(resC);
+        if (resS && resS._id) { setSettings(resS); setAnnouncements(resS.announcements || []); }
+        if (resH && resH._id) setHero(resH);
+        if (resO && resO._id) setOverlay(resO);
+        if (Array.isArray(resCoupons)) setCoupons(resCoupons);
+        if (cached.age < 60) return;
+      }
+
       const [resP, resC, resS, resH, resO, resCoupons] = await Promise.all([
         fetch('/api/products', { cache: 'no-store' }).then(r => r.json()),
         fetch('/api/categories', { cache: 'no-store' }).then(r => r.json()),
@@ -48,6 +62,9 @@ export default function AdminDashboard() {
         fetch('/api/overlay', { cache: 'no-store' }).then(r => r.json()),
         fetch('/api/coupons', { cache: 'no-store' }).then(r => r.json())
       ]);
+      
+      clientCache.set('admin_dashboard', { resP, resC, resS, resH, resO, resCoupons }, 60);
+      
       if (Array.isArray(resP)) setProducts(resP);
       if (Array.isArray(resC)) setCategories(resC);
       if (resS && resS._id) {
@@ -178,6 +195,7 @@ export default function AdminDashboard() {
           body: JSON.stringify({ order: p.order })
         });
       }));
+      clientCache.invalidate('admin_dashboard');
     } catch (err) {
       console.error("Error updating order:", err);
     }
@@ -212,12 +230,14 @@ export default function AdminDashboard() {
     productData.id = editingProduct ? editingProduct.id : Date.now().toString();
     await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productData) });
     setIsProductModalOpen(false);
+    clientCache.invalidate('admin_dashboard');
     fetchData();
   };
 
   const deleteProduct = async (id) => {
     if(window.confirm('هل أنت متأكد من الحذف؟')) {
       await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      clientCache.invalidate('admin_dashboard');
       fetchData();
     }
   };
@@ -231,12 +251,14 @@ export default function AdminDashboard() {
     catData.id = editingCategory ? editingCategory.id : Date.now().toString();
     await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(catData) });
     setIsCategoryModalOpen(false);
+    clientCache.invalidate('admin_dashboard');
     fetchData();
   };
 
   const deleteCategory = async (id) => {
     if(window.confirm('هل أنت متأكد من الحذف؟')) {
       await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+      clientCache.invalidate('admin_dashboard');
       fetchData();
     }
   };
@@ -255,12 +277,14 @@ export default function AdminDashboard() {
     couponData.id = editingCoupon ? editingCoupon.id : Date.now().toString();
     await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(couponData) });
     setIsCouponModalOpen(false);
+    clientCache.invalidate('admin_dashboard');
     fetchData();
   };
 
   const deleteCoupon = async (id) => {
     if(window.confirm('هل أنت متأكد من الحذف؟')) {
       await fetch(`/api/coupons/${id}`, { method: 'DELETE' });
+      clientCache.invalidate('admin_dashboard');
       fetchData();
     }
   };
@@ -286,6 +310,7 @@ export default function AdminDashboard() {
     }
     await fetch('/api/hero', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(heroData) });
     alert('تم الحفظ بنجاح');
+    clientCache.invalidate('admin_dashboard');
     fetchData();
   };
 
@@ -295,6 +320,7 @@ export default function AdminDashboard() {
     const overlayData = { color: formData.get('color'), opacity: Number(formData.get('opacity')), type: formData.get('type') };
     await fetch('/api/overlay', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(overlayData) });
     alert('تم الحفظ بنجاح');
+    clientCache.invalidate('admin_dashboard');
     fetchData();
   };
 
@@ -310,6 +336,7 @@ export default function AdminDashboard() {
     };
     await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settingsData) });
     alert('تم الحفظ بنجاح');
+    clientCache.invalidate('admin_dashboard');
     fetchData();
   };
 
@@ -446,7 +473,7 @@ export default function AdminDashboard() {
                               style={{ cursor: 'move', backgroundColor: draggedProductIdx === idx ? 'var(--bg-elevated)' : 'transparent', transition: 'background-color 0.2s' }}
                             >
                               <td style={{ color: 'var(--gray-mid)', textAlign: 'center', cursor: 'grab' }}><i className="fa-solid fa-grip-vertical"></i></td>
-                              <td><img src={p.images?.[0]} className="product-thumb" alt=""/></td>
+                              <td><img src={optimizeImageUrl(p.images?.[0], { context: 'thumbnail' })} className="product-thumb" alt=""/></td>
                               <td>{p.title?.ar || p.title || p.name}</td>
                               <td><span className="tag tag-accent">{p.categoryId || p.category}</span></td>
                               <td style={{color:'var(--accent)',fontWeight:700}}>{Math.min(...Object.values(p.prices || {}))} ج.م</td>
