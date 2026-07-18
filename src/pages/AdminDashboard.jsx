@@ -195,7 +195,7 @@ export default function AdminDashboard() {
           body: JSON.stringify({ order: p.order })
         });
       }));
-      clientCache.invalidate('admin_dashboard');
+      clientCache.clearAll();
     } catch (err) {
       console.error("Error updating order:", err);
     }
@@ -230,14 +230,14 @@ export default function AdminDashboard() {
     productData.id = editingProduct ? editingProduct.id : Date.now().toString();
     await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productData) });
     setIsProductModalOpen(false);
-    clientCache.invalidate('admin_dashboard');
+    clientCache.clearAll();
     fetchData();
   };
 
   const deleteProduct = async (id) => {
     if(window.confirm('هل أنت متأكد من الحذف؟')) {
       await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      clientCache.invalidate('admin_dashboard');
+      clientCache.clearAll();
       fetchData();
     }
   };
@@ -251,14 +251,14 @@ export default function AdminDashboard() {
     catData.id = editingCategory ? editingCategory.id : Date.now().toString();
     await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(catData) });
     setIsCategoryModalOpen(false);
-    clientCache.invalidate('admin_dashboard');
+    clientCache.clearAll();
     fetchData();
   };
 
   const deleteCategory = async (id) => {
     if(window.confirm('هل أنت متأكد من الحذف؟')) {
       await fetch(`/api/categories/${id}`, { method: 'DELETE' });
-      clientCache.invalidate('admin_dashboard');
+      clientCache.clearAll();
       fetchData();
     }
   };
@@ -277,14 +277,14 @@ export default function AdminDashboard() {
     couponData.id = editingCoupon ? editingCoupon.id : Date.now().toString();
     await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(couponData) });
     setIsCouponModalOpen(false);
-    clientCache.invalidate('admin_dashboard');
+    clientCache.clearAll();
     fetchData();
   };
 
   const deleteCoupon = async (id) => {
     if(window.confirm('هل أنت متأكد من الحذف؟')) {
       await fetch(`/api/coupons/${id}`, { method: 'DELETE' });
-      clientCache.invalidate('admin_dashboard');
+      clientCache.clearAll();
       fetchData();
     }
   };
@@ -305,12 +305,12 @@ export default function AdminDashboard() {
     };
     const fileInput = e.target.querySelector('input[type="file"]');
     if (fileInput?.files?.length > 0) {
-      const url = await handleImageUpload({target: fileInput});
-      if(url) heroData.image = url;
+      const urls = await handleImageUpload(fileInput.files);
+      if(urls && urls.length > 0) heroData.image = urls[0];
     }
     await fetch('/api/hero', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(heroData) });
     alert('تم الحفظ بنجاح');
-    clientCache.invalidate('admin_dashboard');
+    clientCache.clearAll();
     fetchData();
   };
 
@@ -320,7 +320,7 @@ export default function AdminDashboard() {
     const overlayData = { color: formData.get('color'), opacity: Number(formData.get('opacity')), type: formData.get('type') };
     await fetch('/api/overlay', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(overlayData) });
     alert('تم الحفظ بنجاح');
-    clientCache.invalidate('admin_dashboard');
+    clientCache.clearAll();
     fetchData();
   };
 
@@ -336,7 +336,7 @@ export default function AdminDashboard() {
     };
     await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settingsData) });
     alert('تم الحفظ بنجاح');
-    clientCache.invalidate('admin_dashboard');
+    clientCache.clearAll();
     fetchData();
   };
 

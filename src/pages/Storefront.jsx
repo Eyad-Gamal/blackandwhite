@@ -447,6 +447,7 @@ export default function Storefront() {
             );
           })}
         </div>
+        )}
       </section>
 
       {/* ===== BRAND STORY ===== */}
