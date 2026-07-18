@@ -1,5 +1,5 @@
-import { Routes, Route, lazy, Suspense } from 'react-router-dom';
-import { Analytics } from '@vercel/analytics/react';
+import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
 
 // Lazy load pages for better performance
 const Storefront = lazy(() => import('./pages/Storefront'));
@@ -27,15 +27,12 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Storefront />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-        </Routes>
-      </Suspense>
-      <Analytics />
-    </>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<Storefront />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    </Suspense>
   );
 }
 
