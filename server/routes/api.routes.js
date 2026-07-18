@@ -9,6 +9,26 @@ import Coupon from '../models/Coupon.js';
 
 const router = express.Router();
 
+// --- Storefront Data ---
+router.get('/storefront-data', async (req, res) => {
+    try {
+        const [products, categories, settings, hero, overlay] = await Promise.all([
+            Product.find().sort({ order: 1 }),
+            Category.find().sort({ order: 1 }),
+            Settings.findOne(),
+            Hero.findOne(),
+            Overlay.findOne()
+        ]);
+        res.json({
+            products,
+            categories,
+            settings: settings || {},
+            hero: hero || {},
+            overlay: overlay || {}
+        });
+    } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 // --- Products ---
 router.get('/products', async (req, res) => {
     try {

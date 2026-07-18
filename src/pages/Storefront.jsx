@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+const optimizeImage = (url) => {
+  if (url && url.includes('cloudinary.com') && !url.includes('q_auto')) {
+    return url.replace('/upload/', '/upload/q_auto,f_auto,w_800/');
+  }
+  return url;
+};
+
 export default function Storefront() {
   const { t, i18n } = useTranslation();
 
@@ -62,24 +69,20 @@ export default function Storefront() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [resP, resC, resS, resH, resO] = await Promise.all([
-          fetch('/api/products', { cache: 'no-store' }).then(r => r.json()),
-          fetch('/api/categories', { cache: 'no-store' }).then(r => r.json()),
-          fetch('/api/settings', { cache: 'no-store' }).then(r => r.json()),
-          fetch('/api/hero', { cache: 'no-store' }).then(r => r.json()),
-          fetch('/api/overlay', { cache: 'no-store' }).then(r => r.json())
-        ]);
+        const res = await fetch('/api/storefront-data', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to fetch data');
+        const data = await res.json();
 
-        if (Array.isArray(resP)) {
-            setProducts(resP.map(p => ({
+        if (Array.isArray(data.products)) {
+            setProducts(data.products.map(p => ({
                 ...p,
                 prices: p.prices || (p.sizes ? p.sizes.reduce((acc, s) => ({...acc, [s.size]: s.price}), {}) : {})
             })));
         }
-        if (Array.isArray(resC)) setCategories(resC);
-        if (resS && resS._id) setSettings(resS);
-        if (resH && resH._id) setHero(resH);
-        if (resO && resO._id) setOverlay(resO);
+        if (Array.isArray(data.categories)) setCategories(data.categories);
+        if (data.settings && data.settings._id) setSettings(data.settings);
+        if (data.hero && data.hero._id) setHero(data.hero);
+        if (data.overlay && data.overlay._id) setOverlay(data.overlay);
       } catch (e) {
         console.error("API Error:", e);
       }
@@ -90,13 +93,9 @@ export default function Storefront() {
       fetchData();
     };
     window.addEventListener('focus', handleFocus);
-    
-    // Auto-reload data every 10 seconds for real-time stock updates
-    const intervalId = setInterval(fetchData, 10000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
-      clearInterval(intervalId);
     };
   }, [i18n.language]);
 
@@ -378,7 +377,7 @@ export default function Storefront() {
                   <div className={`product-tag ${p.tag === 'جديد' ? 'new-tag' : ''}`}>{p.tag === 'جديد' ? t('productCard.new') : p.tag}</div>
                 ) : null}
                 <div className="product-img-wrapper">
-                  <img src={p.images?.[0]} alt={pName} loading="lazy" />
+                  <img src={optimizeImage(p.images?.[0])} alt={pName} loading="lazy" />
                   <div className="product-img-overlay"></div>
                   <button className="product-quick-btn" onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); setActiveThumb(0); setSelectedSize(''); setShowSuccess(false); }}>{t('productCard.quickView')}</button>
                 </div>
@@ -477,7 +476,7 @@ export default function Storefront() {
               <img src={selectedProduct.images?.[activeThumb]} className="modal-main-img" alt={selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name} fetchpriority="high" />
               <div className="modal-thumbs">
                   {selectedProduct.images?.map((img, idx) => (
-                      <img key={idx} src={img} alt="" className={`modal-thumb ${idx === activeThumb ? 'active' : ''}`} onClick={() => setActiveThumb(idx)} loading="lazy" />
+                      <img key={idx} src={optimizeImage(img)} alt="" className={`modal-thumb ${idx === activeThumb ? 'active' : ''}`} onClick={() => setActiveThumb(idx)} loading="lazy" />
                   ))}
               </div>
             </div>
