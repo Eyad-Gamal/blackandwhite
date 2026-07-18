@@ -1,0 +1,11 @@
+# Black & White E-commerce - Robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://blackandwhite.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

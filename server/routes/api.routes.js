@@ -20,38 +20,61 @@ async function fetchStorefrontData(fields) {
     const data = {};
     const fetchPromises = [];
 
+    // Add timeout and lean() for better performance
+    const QUERY_TIMEOUT = 30000; // 30 seconds for slow MongoDB Atlas connections
+
     if (fields.includes('products')) {
         fetchPromises.push(
-            Product.find().sort({ order: 1 })
+            Product.find().sort({ order: 1 }).maxTimeMS(QUERY_TIMEOUT).lean()
                 .then(result => { data.products = result; })
+                .catch(err => {
+                    console.error('[DB] Products fetch failed:', err.message);
+                    data.products = [];
+                })
         );
     }
     if (fields.includes('categories')) {
         fetchPromises.push(
-            Category.find().sort({ order: 1 })
+            Category.find().sort({ order: 1 }).maxTimeMS(QUERY_TIMEOUT).lean()
                 .then(result => { data.categories = result; })
+                .catch(err => {
+                    console.error('[DB] Categories fetch failed:', err.message);
+                    data.categories = [];
+                })
         );
     }
     if (fields.includes('settings')) {
         fetchPromises.push(
-            Settings.findOne()
+            Settings.findOne().maxTimeMS(QUERY_TIMEOUT).lean()
                 .then(result => { data.settings = result || {}; })
+                .catch(err => {
+                    console.error('[DB] Settings fetch failed:', err.message);
+                    data.settings = {};
+                })
         );
     }
     if (fields.includes('hero')) {
         fetchPromises.push(
-            Hero.findOne()
+            Hero.findOne().maxTimeMS(QUERY_TIMEOUT).lean()
                 .then(result => { data.hero = result || {}; })
+                .catch(err => {
+                    console.error('[DB] Hero fetch failed:', err.message);
+                    data.hero = {};
+                })
         );
     }
     if (fields.includes('overlay')) {
         fetchPromises.push(
-            Overlay.findOne()
+            Overlay.findOne().maxTimeMS(QUERY_TIMEOUT).lean()
                 .then(result => { data.overlay = result || {}; })
+                .catch(err => {
+                    console.error('[DB] Overlay fetch failed:', err.message);
+                    data.overlay = {};
+                })
         );
     }
 
-    await Promise.all(fetchPromises);
+    await Promise.allSettled(fetchPromises);
     return data;
 }
 
@@ -126,7 +149,7 @@ router.get('/health', (req, res) => {
     try {
         const memoryUsage = process.memoryUsage();
         const cacheStats = cacheService.getStats();
-        
+
         const healthData = {
             timestamp: new Date().toISOString(),
             uptime: process.uptime(),
@@ -136,7 +159,7 @@ router.get('/health', (req, res) => {
             },
             cache: {
                 ...cacheStats,
-                hitRate: cacheStats.hits + cacheStats.misses > 0 
+                hitRate: cacheStats.hits + cacheStats.misses > 0
                     ? ((cacheStats.hits / (cacheStats.hits + cacheStats.misses)) * 100).toFixed(2) + '%'
                     : '0%'
             },
@@ -146,7 +169,7 @@ router.get('/health', (req, res) => {
                 rss: Math.round(memoryUsage.rss / 1024 / 1024) + ' MB'
             }
         };
-        
+
         res.status(200).json(healthData);
     } catch (err) {
         res.status(500).json({ status: 'error', message: err.message });
