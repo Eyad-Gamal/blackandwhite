@@ -1,4 +1,4 @@
-import{j as e}from"./index-BgjPHsDm.js";import{a as p}from"./i18n-BP_6ddag.js";import{c as f,o as Ee}from"./imageOptimizer-B1gZvlC5.js";import"./vendor-DutPk6Su.js";const _e=`
+import{j as e}from"./index-Vc_jJ4UM.js";import{a as p}from"./i18n-BP_6ddag.js";import{c as f,o as Ee}from"./imageOptimizer-iVif-YcK.js";import"./vendor-DutPk6Su.js";const _e=`
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {

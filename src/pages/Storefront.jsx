@@ -73,16 +73,16 @@ export default function Storefront() {
         if (cached && cached.data) {
           const data = cached.data;
           if (Array.isArray(data.products)) {
-              setProducts(data.products.map(p => ({
-                  ...p,
-                  prices: p.prices || (p.sizes ? p.sizes.reduce((acc, s) => ({...acc, [s.size]: s.price}), {}) : {})
-              })));
+            setProducts(data.products.map(p => ({
+              ...p,
+              prices: p.prices || (p.sizes ? p.sizes.reduce((acc, s) => ({ ...acc, [s.size]: s.price }), {}) : {})
+            })));
           }
           if (Array.isArray(data.categories)) setCategories(data.categories);
           if (data.settings && data.settings._id) setSettings(data.settings);
           if (data.hero && data.hero._id) setHero(data.hero);
           if (data.overlay && data.overlay._id) setOverlay(data.overlay);
-          
+
           setIsLoading(false);
           // If cached data is fresh (less than 150 seconds old), don't fetch again
           if (cached.age < 150) return;
@@ -91,35 +91,35 @@ export default function Storefront() {
         const res = await fetch('/api/storefront-data', { cache: 'no-store' });
         if (!res.ok) throw new Error('Failed to fetch data');
         const data = await res.json();
-        
+
         clientCache.set('storefront', data, 300);
 
         if (Array.isArray(data.products)) {
-            setProducts(data.products.map(p => ({
-                ...p,
-                prices: p.prices || (p.sizes ? p.sizes.reduce((acc, s) => ({...acc, [s.size]: s.price}), {}) : {})
-            })));
+          setProducts(data.products.map(p => ({
+            ...p,
+            prices: p.prices || (p.sizes ? p.sizes.reduce((acc, s) => ({ ...acc, [s.size]: s.price }), {}) : {})
+          })));
         }
         if (Array.isArray(data.categories)) setCategories(data.categories);
         if (data.settings && data.settings._id) setSettings(data.settings);
         if (data.hero && data.hero._id) setHero(data.hero);
         if (data.overlay && data.overlay._id) setOverlay(data.overlay);
-        
+
         setIsLoading(false);
       } catch (e) {
         console.error("API Error:", e);
         const cached = clientCache.get('storefront');
         if (cached && cached.data) {
-            // We already populated from stale cache, just hide loading
-            setIsLoading(false);
+          // We already populated from stale cache, just hide loading
+          setIsLoading(false);
         } else {
-            if (retryCount === 0) {
-                // Auto retry once after 1s
-                setTimeout(() => setRetryCount(1), 1000);
-            } else {
-                setError(e.message || 'Network error');
-                setIsLoading(false);
-            }
+          if (retryCount === 0) {
+            // Auto retry once after 1s
+            setTimeout(() => setRetryCount(1), 1000);
+          } else {
+            setError(e.message || 'Network error');
+            setIsLoading(false);
+          }
         }
       }
     }
@@ -160,7 +160,7 @@ export default function Storefront() {
   });
 
   const getOverlayCSS = () => {
-    if(!overlay.color) return 'none';
+    if (!overlay.color) return 'none';
     const r = parseInt(overlay.color.slice(1, 3), 16);
     const g = parseInt(overlay.color.slice(3, 5), 16);
     const b = parseInt(overlay.color.slice(5, 7), 16);
@@ -171,7 +171,7 @@ export default function Storefront() {
   };
 
   const getHeroTextBg = () => {
-    if(overlay.type === 'transparent' || !overlay.color) return 'transparent';
+    if (overlay.type === 'transparent' || !overlay.color) return 'transparent';
     const r = parseInt(overlay.color.slice(1, 3), 16);
     const g = parseInt(overlay.color.slice(3, 5), 16);
     const b = parseInt(overlay.color.slice(5, 7), 16);
@@ -206,15 +206,15 @@ export default function Storefront() {
   };
 
   const handleOrder = async () => {
-    if(!orderName || orderName.trim() === '') {
+    if (!orderName || orderName.trim() === '') {
       alert(i18n.language === 'ar' ? 'برجاء إدخال الاسم' : 'Please enter your name');
       return;
     }
-    if(!orderPhone || orderPhone.length < 10) {
+    if (!orderPhone || orderPhone.length < 10) {
       alert(t('alert.enterPhone'));
       return;
     }
-    if(!orderAddress || orderAddress.trim() === '') {
+    if (!orderAddress || orderAddress.trim() === '') {
       alert(i18n.language === 'ar' ? 'برجاء إدخال العنوان بالتفصيل' : 'Please enter your detailed address');
       return;
     }
@@ -223,12 +223,12 @@ export default function Storefront() {
     let finalPrice = basePrice;
     let couponText = '';
     if (appliedCoupon) {
-        if (appliedCoupon.type === 'percentage') {
-            finalPrice = basePrice - (basePrice * (appliedCoupon.value / 100));
-        } else {
-            finalPrice = Math.max(0, basePrice - appliedCoupon.value);
-        }
-        couponText = `\n${t('alert.whatsappCoupon')} ${appliedCoupon.code}\n${t('alert.whatsappDiscountPrice')} ${finalPrice} ${t('hero.currency')}`;
+      if (appliedCoupon.type === 'percentage') {
+        finalPrice = basePrice - (basePrice * (appliedCoupon.value / 100));
+      } else {
+        finalPrice = Math.max(0, basePrice - appliedCoupon.value);
+      }
+      couponText = `\n${t('alert.whatsappCoupon')} ${appliedCoupon.code}\n${t('alert.whatsappDiscountPrice')} ${finalPrice} ${t('hero.currency')}`;
     }
 
     try {
@@ -247,13 +247,14 @@ export default function Storefront() {
     window.open(url, '_blank');
     setShowSuccess(true);
     setTimeout(() => {
-        setSelectedProduct(null);
+      setSelectedProduct(null);
     }, 3000);
   };
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .product-img-overlay { background: ${getOverlayCSS()} !important; }
         .hero-text { background: ${getHeroTextBg()} !important; }
       `}} />
@@ -262,7 +263,7 @@ export default function Storefront() {
       <header className="site-header" id="siteHeader">
         <div className="header-inner">
           <a href="#hero" className="header-logo" onClick={scrollToTop}>
-            <div className="logo-mark"><img src="/main-logo.jpeg" alt="Black & White" fetchpriority="high" /></div>
+            <div className="logo-mark"><img src="/main-logo.jpeg" alt="Black & White" fetchPriority="high" /></div>
           </a>
           <nav className="header-nav">
             <a href="#hero" className="nav-link active">{t('header.home')}</a>
@@ -302,22 +303,22 @@ export default function Storefront() {
           <div className="search-input-wrapper">
             <i className="fa-solid fa-magnifying-glass search-icon-btn"></i>
             <input type="text" className="search-input" placeholder={t('header.search')}
-                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+              value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
           <div className="search-results">
             {searchQuery && filteredProducts.map(p => (
-                <div key={p._id || p.name} className="search-result-card" onClick={() => { setSelectedProduct(p); setIsSearchOpen(false); }}>
-                    <img src={p.images?.[0]} alt={p.name} loading="lazy" />
-                    <h4>{p.name}</h4>
-                </div>
+              <div key={p._id || p.name} className="search-result-card" onClick={() => { setSelectedProduct(p); setIsSearchOpen(false); }}>
+                <img src={p.images?.[0]} alt={p.name} loading="lazy" />
+                <h4>{p.name}</h4>
+              </div>
             ))}
             {searchQuery && filteredProducts.length === 0 && (
-                <div className="search-no-results">{t('search.no_results')}</div>
+              <div className="search-no-results">{t('search.no_results')}</div>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* ERROR BANNER */}
       {error && (
         <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '16px', textAlign: 'center', borderBottom: '1px solid var(--danger)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', position: 'sticky', top: '70px', zIndex: 90 }}>
@@ -331,44 +332,44 @@ export default function Storefront() {
 
       {/* ===== HERO ===== */}
       {isLoading ? <HeroSkeleton /> : (
-      <section className="hero" id="hero">
-        <div className="hero-bg-split">
-          <div className="bg-left"></div>
-          <div className="bg-right"></div>
-        </div>
-        <div className="hero-content">
-          <div className="hero-text">
-            <img src="/main-logo.jpeg" alt="Black & White Logo" className="hero-text-logo" fetchpriority="high" />
-            <h1 className="hero-headline" dangerouslySetInnerHTML={{ __html: (hero.headline?.[i18n.language] || hero.headline?.ar || hero.headline || t('hero.headline')).replace(hero.styledWord?.[i18n.language] || hero.styledWord?.ar || hero.styledWord || t('hero.styledWord'), `<span class="stroke-text">${hero.styledWord?.[i18n.language] || hero.styledWord?.ar || hero.styledWord || t('hero.styledWord')}</span><br>`) }}></h1>
-            <p className="hero-tagline">{hero.tagline?.[i18n.language] || hero.tagline?.ar || hero.tagline || t('hero.tagline')}</p>
+        <section className="hero" id="hero">
+          <div className="hero-bg-split">
+            <div className="bg-left"></div>
+            <div className="bg-right"></div>
           </div>
-          <div className="hero-visual">
-            <div className="hero-main-img-wrapper">
-              <img src={optimizeImageUrl(hero.image || "/Gemini_Generated_Image_.png", { context: 'hero' })} alt="Black & White Collection" id="heroImg" fetchpriority="high" />
-              <div className="hero-img-overlay"></div>
-              <div className="hero-img-label">
-                <span className="hero-img-name">{hero.productLabel?.[i18n.language] || hero.productLabel?.ar || hero.productLabel || t('hero.productLabel')}</span>
-                <span className="hero-img-price">{hero.heroPrice ? `${t('hero.price')} ${hero.heroPrice}` : `${t('hero.startsFrom')} ${products.length > 0 ? Math.min(...Object.values(products[0].prices || {})) : 299}`} <span id="heroImgPrice"></span> {t('hero.currency')}</span>
+          <div className="hero-content">
+            <div className="hero-text">
+              <img src="/main-logo.jpeg" alt="Black & White Logo" className="hero-text-logo" fetchPriority="high" />
+              <h1 className="hero-headline" dangerouslySetInnerHTML={{ __html: (hero.headline?.[i18n.language] || hero.headline?.ar || hero.headline || t('hero.headline')).replace(hero.styledWord?.[i18n.language] || hero.styledWord?.ar || hero.styledWord || t('hero.styledWord'), `<span class="stroke-text">${hero.styledWord?.[i18n.language] || hero.styledWord?.ar || hero.styledWord || t('hero.styledWord')}</span><br>`) }}></h1>
+              <p className="hero-tagline">{hero.tagline?.[i18n.language] || hero.tagline?.ar || hero.tagline || t('hero.tagline')}</p>
+            </div>
+            <div className="hero-visual">
+              <div className="hero-main-img-wrapper">
+                <img src={optimizeImageUrl(hero.image || "/Gemini_Generated_Image_.png", { context: 'hero' })} alt="Black & White Collection" id="heroImg" fetchPriority="high" />
+                <div className="hero-img-overlay"></div>
+                <div className="hero-img-label">
+                  <span className="hero-img-name">{hero.productLabel?.[i18n.language] || hero.productLabel?.ar || hero.productLabel || t('hero.productLabel')}</span>
+                  <span className="hero-img-price">{hero.heroPrice ? `${t('hero.price')} ${hero.heroPrice}` : `${t('hero.startsFrom')} ${products.length > 0 ? Math.min(...Object.values(products[0].prices || {})) : 299}`} <span id="heroImgPrice"></span> {t('hero.currency')}</span>
+                </div>
+                <div className="hero-floating-badge">{hero.badge?.[i18n.language] || hero.badge?.ar || hero.badge || t('hero.badge')}</div>
               </div>
-              <div className="hero-floating-badge">{hero.badge?.[i18n.language] || hero.badge?.ar || hero.badge || t('hero.badge')}</div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* ===== ANNOUNCEMENT BAR ===== */}
       <div className="announcement-bar">
         <div className="announcement-track">
           {(() => {
-            const arr = settings.announcements && settings.announcements.length > 0 
-              ? settings.announcements 
+            const arr = settings.announcements && settings.announcements.length > 0
+              ? settings.announcements
               : [
-                  { text: { ar: t('announcement.freeDelivery'), en: t('announcement.freeDelivery') }, icon: 'fa-solid fa-truck-fast' },
-                  { text: { ar: t('announcement.launch'), en: t('announcement.launch') }, icon: 'fa-solid fa-star' },
-                  { text: { ar: t('announcement.return'), en: t('announcement.return') }, icon: 'fa-solid fa-rotate-left' },
-                  { text: { ar: t('announcement.guarantee'), en: t('announcement.guarantee') }, icon: 'fa-solid fa-shield-halved' }
-                ];
+                { text: { ar: t('announcement.freeDelivery'), en: t('announcement.freeDelivery') }, icon: 'fa-solid fa-truck-fast' },
+                { text: { ar: t('announcement.launch'), en: t('announcement.launch') }, icon: 'fa-solid fa-star' },
+                { text: { ar: t('announcement.return'), en: t('announcement.return') }, icon: 'fa-solid fa-rotate-left' },
+                { text: { ar: t('announcement.guarantee'), en: t('announcement.guarantee') }, icon: 'fa-solid fa-shield-halved' }
+              ];
             const repeatedArr = [...arr, ...arr]; // Repeat to create the infinite scroll effect
             return repeatedArr.map((ann, idx) => (
               <span key={idx}><i className={ann.icon || 'fa-solid fa-star'}></i> {ann.text?.[i18n.language] || ann.text?.ar || ''}</span>
@@ -385,68 +386,68 @@ export default function Storefront() {
           <p className="section-sub">{t('products.sub')}</p>
         </div>
         {isLoading ? <CategoryFilterSkeleton /> : (
-        <div className="filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>{t('products.filterAll')}</button>
-            {categories.map(cat => {
-              const catNameStr = cat.name?.[i18n.language] || cat.name?.ar || cat.name;
-              return <button key={cat._id || cat.id || catNameStr} className={`filter-btn ${activeFilter === catNameStr ? 'active' : ''}`} onClick={() => setActiveFilter(catNameStr)}>{catNameStr}</button>;
-            })}
+          <div className="filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>{t('products.filterAll')}</button>
+              {categories.map(cat => {
+                const catNameStr = cat.name?.[i18n.language] || cat.name?.ar || cat.name;
+                return <button key={cat._id || cat.id || catNameStr} className={`filter-btn ${activeFilter === catNameStr ? 'active' : ''}`} onClick={() => setActiveFilter(catNameStr)}>{catNameStr}</button>;
+              })}
+            </div>
+            <select
+              value={activeSort}
+              onChange={(e) => setActiveSort(e.target.value)}
+              className="form-select"
+              style={{ width: 'auto', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', color: 'var(--white)', padding: '8px 16px', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="default">{i18n.language === 'ar' ? 'الترتيب الافتراضي' : 'Default Sort'}</option>
+              <option value="price_asc">{i18n.language === 'ar' ? 'السعر: من الأقل للأعلى' : 'Price: Low to High'}</option>
+              <option value="price_desc">{i18n.language === 'ar' ? 'السعر: من الأعلى للأقل' : 'Price: High to Low'}</option>
+            </select>
           </div>
-          <select 
-            value={activeSort} 
-            onChange={(e) => setActiveSort(e.target.value)}
-            className="form-select"
-            style={{ width: 'auto', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', color: 'var(--white)', padding: '8px 16px', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
-          >
-            <option value="default">{i18n.language === 'ar' ? 'الترتيب الافتراضي' : 'Default Sort'}</option>
-            <option value="price_asc">{i18n.language === 'ar' ? 'السعر: من الأقل للأعلى' : 'Price: Low to High'}</option>
-            <option value="price_desc">{i18n.language === 'ar' ? 'السعر: من الأعلى للأقل' : 'Price: High to Low'}</option>
-          </select>
-        </div>
         )}
         {isLoading ? <ProductGridSkeleton count={8} /> : (
-        <div className="products-grid">
-          {filteredProducts.map((p, idx) => {
-            const minP = Math.min(...Object.values(p.prices || {}));
-            const pName = p.title?.[i18n.language] || p.title?.ar || p.title || p.name;
-            const pCatOriginal = p.categoryId || p.category;
-            const pCat = categories.find(c => c.name?.ar === pCatOriginal || c.name === pCatOriginal)?.name?.[i18n.language] || pCatOriginal;
-            return (
-              <div key={p._id || idx} className="product-card animate-in visible" style={{ transitionDelay: `${idx * 0.06}s` }} onClick={() => { setSelectedProduct(p); setActiveThumb(0); setSelectedSize(''); setShowSuccess(false); }}>
-                {p.stock <= 0 ? (
-                  <div className="product-tag" style={{background: 'var(--danger)', color: 'white'}}>{i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock'}</div>
-                ) : p.tag ? (
-                  <div className={`product-tag ${p.tag === 'جديد' ? 'new-tag' : ''}`}>{p.tag === 'جديد' ? t('productCard.new') : p.tag}</div>
-                ) : null}
-                <div className="product-img-wrapper">
-                  <img src={optimizeImageUrl(p.images?.[0], { context: 'grid' })} alt={pName} loading={getLazyLoading(idx)} fetchpriority={getImagePriority(idx)} />
-                  <div className="product-img-overlay"></div>
-                  <button className="product-quick-btn" onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); setActiveThumb(0); setSelectedSize(''); setShowSuccess(false); }}>{t('productCard.quickView')}</button>
-                </div>
-                <div className="product-info">
-                  <div className="product-category">{pCat}</div>
-                  <h3 className="product-name">{pName}</h3>
-                  <div className="product-price-row">
-                    <div className="product-price">{t('hero.startsFrom')} <strong>{minP} {t('hero.currency')}</strong></div>
-                    <div className="product-sizes-preview">
-                      {Object.keys(p.prices || {}).slice(0, 3).map(s => <div key={s} className="size-dot">{s}</div>)}
-                    </div>
-                  </div>
+          <div className="products-grid">
+            {filteredProducts.map((p, idx) => {
+              const minP = Math.min(...Object.values(p.prices || {}));
+              const pName = p.title?.[i18n.language] || p.title?.ar || p.title || p.name;
+              const pCatOriginal = p.categoryId || p.category;
+              const pCat = categories.find(c => c.name?.ar === pCatOriginal || c.name === pCatOriginal)?.name?.[i18n.language] || pCatOriginal;
+              return (
+                <div key={p._id || idx} className="product-card animate-in visible" style={{ transitionDelay: `${idx * 0.06}s` }} onClick={() => { setSelectedProduct(p); setActiveThumb(0); setSelectedSize(''); setShowSuccess(false); }}>
                   {p.stock <= 0 ? (
-                    <div style={{color:'var(--danger)', fontSize:'0.75rem', marginTop:'8px', fontWeight:'bold', display:'flex', alignItems:'center', gap:'4px'}}>
-                      <i className="fa-solid fa-circle-xmark"></i> {i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock'}
-                    </div>
-                  ) : p.stock > 0 ? (
-                    <div style={{color:'var(--accent)', fontSize:'0.75rem', marginTop:'8px', fontWeight:'bold', display:'flex', alignItems:'center', gap:'4px'}}>
-                      <i className="fa-solid fa-clock" style={{animation:'glowPulse 1.5s infinite'}}></i> {i18n.language === 'ar' ? `متبقي ${p.stock} قطعة` : `Only ${p.stock} left`}
-                    </div>
+                    <div className="product-tag" style={{ background: 'var(--danger)', color: 'white' }}>{i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock'}</div>
+                  ) : p.tag ? (
+                    <div className={`product-tag ${p.tag === 'جديد' ? 'new-tag' : ''}`}>{p.tag === 'جديد' ? t('productCard.new') : p.tag}</div>
                   ) : null}
+                  <div className="product-img-wrapper">
+                    <img src={optimizeImageUrl(p.images?.[0], { context: 'grid' })} alt={pName} loading={getLazyLoading(idx)} fetchPriority={getImagePriority(idx)} />
+                    <div className="product-img-overlay"></div>
+                    <button className="product-quick-btn" onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); setActiveThumb(0); setSelectedSize(''); setShowSuccess(false); }}>{t('productCard.quickView')}</button>
+                  </div>
+                  <div className="product-info">
+                    <div className="product-category">{pCat}</div>
+                    <h3 className="product-name">{pName}</h3>
+                    <div className="product-price-row">
+                      <div className="product-price">{t('hero.startsFrom')} <strong>{minP} {t('hero.currency')}</strong></div>
+                      <div className="product-sizes-preview">
+                        {Object.keys(p.prices || {}).slice(0, 3).map(s => <div key={s} className="size-dot">{s}</div>)}
+                      </div>
+                    </div>
+                    {p.stock <= 0 ? (
+                      <div style={{ color: 'var(--danger)', fontSize: '0.75rem', marginTop: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <i className="fa-solid fa-circle-xmark"></i> {i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock'}
+                      </div>
+                    ) : p.stock > 0 ? (
+                      <div style={{ color: 'var(--accent)', fontSize: '0.75rem', marginTop: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <i className="fa-solid fa-clock" style={{ animation: 'glowPulse 1.5s infinite' }}></i> {i18n.language === 'ar' ? `متبقي ${p.stock} قطعة` : `Only ${p.stock} left`}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         )}
       </section>
 
@@ -455,13 +456,13 @@ export default function Storefront() {
         <div className="brand-story-inner">
           <div className="brand-story-images animate-in visible">
             <div className="brand-story-img" style={{ gridColumn: '1 / -1' }}>
-                <img src="/Gemini_Generated_Image_ (2).png" alt="Brand Story" loading="lazy" style={{ height: '200px', width: '100%', objectFit: 'cover' }} />
+              <img src="/Gemini_Generated_Image_ (2).png" alt="Brand Story" loading="lazy" style={{ height: '200px', width: '100%', objectFit: 'cover' }} />
             </div>
             <div className="brand-story-img">
-                <img src="/Gemini_Generated_Image_ (4).png" alt="Brand Story" loading="lazy" style={{ height: '150px', width: '100%', objectFit: 'cover' }} />
+              <img src="/Gemini_Generated_Image_ (4).png" alt="Brand Story" loading="lazy" style={{ height: '150px', width: '100%', objectFit: 'cover' }} />
             </div>
             <div className="brand-story-img">
-                <img src="/Gemini_Generated_Image_ (5).png" alt="Brand Story" loading="lazy" style={{ height: '150px', width: '100%', objectFit: 'cover' }} />
+              <img src="/Gemini_Generated_Image_ (5).png" alt="Brand Story" loading="lazy" style={{ height: '150px', width: '100%', objectFit: 'cover' }} />
             </div>
           </div>
           <div className="brand-story-text animate-in visible">
@@ -517,11 +518,11 @@ export default function Storefront() {
           <div className="modal-container">
             <button className="modal-close" onClick={() => { setSelectedProduct(null); setAppliedCoupon(null); setCouponCode(''); setCouponError(''); }} aria-label="Close"><i className="fa-solid fa-xmark"></i></button>
             <div className="modal-image-panel">
-              <img src={optimizeImageUrl(selectedProduct.images?.[activeThumb], { context: 'modal' })} className="modal-main-img" alt={selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name} fetchpriority="high" />
+              <img src={optimizeImageUrl(selectedProduct.images?.[activeThumb], { context: 'modal' })} className="modal-main-img" alt={selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name} fetchPriority="high" />
               <div className="modal-thumbs">
-                  {selectedProduct.images?.map((img, idx) => (
-                      <img key={idx} src={optimizeImageUrl(img, { context: 'thumbnail' })} alt="" className={`modal-thumb ${idx === activeThumb ? 'active' : ''}`} onClick={() => setActiveThumb(idx)} loading="lazy" />
-                  ))}
+                {selectedProduct.images?.map((img, idx) => (
+                  <img key={idx} src={optimizeImageUrl(img, { context: 'thumbnail' })} alt="" className={`modal-thumb ${idx === activeThumb ? 'active' : ''}`} onClick={() => setActiveThumb(idx)} loading="lazy" />
+                ))}
               </div>
             </div>
             <div className="modal-info-panel">
@@ -530,30 +531,30 @@ export default function Storefront() {
                   <p className="modal-category">{categories.find(c => c.name?.ar === (selectedProduct.categoryId || selectedProduct.category) || c.name === (selectedProduct.categoryId || selectedProduct.category))?.name?.[i18n.language] || (selectedProduct.categoryId || selectedProduct.category)}</p>
                   <h2 className="modal-title">{selectedProduct.title?.[i18n.language] || selectedProduct.title?.ar || selectedProduct.title || selectedProduct.name}</h2>
                   <p className="modal-tagline">{t('products.sub')}</p>
-                  
+
                   {selectedProduct.stock <= 0 ? (
-                    <div style={{background:'var(--danger-bg)', border:'1px solid var(--danger)', color:'var(--danger)', padding:'10px', borderRadius:'8px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'8px', fontWeight:'bold'}}>
-                      <i className="fa-solid fa-circle-xmark"></i> 
+                    <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '10px', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                      <i className="fa-solid fa-circle-xmark"></i>
                       <span>{i18n.language === 'ar' ? 'عذراً، هذا المنتج غير متوفر حالياً (نفذت الكمية)' : 'Sorry, this product is currently out of stock.'}</span>
                     </div>
                   ) : selectedProduct.stock > 0 ? (
-                    <div style={{background:'rgba(200, 169, 110, 0.1)', border:'1px solid var(--accent)', color:'var(--accent)', padding:'10px', borderRadius:'8px', marginBottom:'16px', display:'flex', alignItems:'center', gap:'8px', fontWeight:'bold'}}>
-                      <i className="fa-solid fa-clock" style={{animation:'glowPulse 1.5s infinite'}}></i> 
+                    <div style={{ background: 'rgba(200, 169, 110, 0.1)', border: '1px solid var(--accent)', color: 'var(--accent)', padding: '10px', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                      <i className="fa-solid fa-clock" style={{ animation: 'glowPulse 1.5s infinite' }}></i>
                       <span>{i18n.language === 'ar' ? `متبقي ${selectedProduct.stock} قطعة فقط في المخزون` : `Only ${selectedProduct.stock} pieces left in stock.`}</span>
                     </div>
                   ) : null}
-                  
+
                   <div id="sizeSection">
                     <p className="modal-label">{t('modal.chooseSize')}</p>
                     <div className="modal-size-options">
-                        {Object.keys(selectedProduct.prices || {}).map(s => (
-                            <button key={s} className={`size-btn ${selectedSize === s ? 'active' : ''}`} onClick={() => setSelectedSize(s)}>{s}</button>
-                        ))}
+                      {Object.keys(selectedProduct.prices || {}).map(s => (
+                        <button key={s} className={`size-btn ${selectedSize === s ? 'active' : ''}`} onClick={() => setSelectedSize(s)}>{s}</button>
+                      ))}
                     </div>
                   </div>
                   <div className="modal-price-block">
                     <p className="modal-label">{t('hero.price')}</p>
-                    <div style={{display:'flex',flexDirection:'column'}}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <p className="modal-price" style={{ textDecoration: appliedCoupon ? 'line-through' : 'none', color: appliedCoupon ? '#999' : 'inherit', fontSize: appliedCoupon ? '1.2rem' : '1.75rem' }}>
                         {selectedSize ? selectedProduct.prices[selectedSize] : Math.min(...Object.values(selectedProduct.prices || {}))} <span className="currency">{t('hero.currency')}</span>
                       </p>
@@ -568,23 +569,23 @@ export default function Storefront() {
                       )}
                     </div>
                   </div>
-                  <div style={{marginBottom:'24px'}}>
-                    <div style={{display:'flex',gap:'8px'}}>
-                      <input type="text" placeholder={t('modal.coupon')} value={couponCode} onChange={e => setCouponCode(e.target.value)} style={{flex:1,padding:'12px 16px',border:'1px solid var(--border-subtle)',borderRadius:'8px',textTransform:'uppercase',background:'var(--bg)',color:'var(--white)',outline:'none',fontSize:'0.9rem'}} />
-                      <button onClick={handleApplyCoupon} style={{background:'var(--white)',color:'var(--bg)',border:'none',padding:'0 20px',borderRadius:'8px',cursor:'pointer',fontWeight:'bold'}}>{t('modal.applyCoupon')}</button>
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="text" placeholder={t('modal.coupon')} value={couponCode} onChange={e => setCouponCode(e.target.value)} style={{ flex: 1, padding: '12px 16px', border: '1px solid var(--border-subtle)', borderRadius: '8px', textTransform: 'uppercase', background: 'var(--bg)', color: 'var(--white)', outline: 'none', fontSize: '0.9rem' }} />
+                      <button onClick={handleApplyCoupon} style={{ background: 'var(--white)', color: 'var(--bg)', border: 'none', padding: '0 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>{t('modal.applyCoupon')}</button>
                     </div>
-                    {couponError && <p style={{color:'var(--danger)',fontSize:'0.8rem',marginTop:'6px'}}>{couponError}</p>}
-                    {appliedCoupon && <p style={{color:'var(--success)',fontSize:'0.8rem',marginTop:'6px'}}>{t('modal.couponApplied')}</p>}
+                    {couponError && <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '6px' }}>{couponError}</p>}
+                    {appliedCoupon && <p style={{ color: 'var(--success)', fontSize: '0.8rem', marginTop: '6px' }}>{t('modal.couponApplied')}</p>}
                   </div>
-                  
-                  <div className="modal-quantity-wrapper" style={{marginBottom:'24px', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                    <label style={{color: 'var(--gray-light)', fontSize: '0.9rem', fontWeight: 'bold'}}>{i18n.language === 'ar' ? 'الكمية:' : 'Quantity:'}</label>
-                    <input type="number" min="1" max={selectedProduct.stock || 100} value={orderQuantity} onChange={(e) => setOrderQuantity(Number(e.target.value))} style={{width: '80px', padding: '8px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', textAlign: 'center', fontFamily: 'inherit'}} />
+
+                  <div className="modal-quantity-wrapper" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ color: 'var(--gray-light)', fontSize: '0.9rem', fontWeight: 'bold' }}>{i18n.language === 'ar' ? 'الكمية:' : 'Quantity:'}</label>
+                    <input type="number" min="1" max={selectedProduct.stock || 100} value={orderQuantity} onChange={(e) => setOrderQuantity(Number(e.target.value))} style={{ width: '80px', padding: '8px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', textAlign: 'center', fontFamily: 'inherit' }} />
                   </div>
-                  
+
                   <button onClick={() => {
-                    if(!selectedSize) { alert(t('alert.selectSize')); return; }
-                    if(orderQuantity < 1) { alert(i18n.language === 'ar' ? 'الكمية غير صحيحة' : 'Invalid quantity'); return; }
+                    if (!selectedSize) { alert(t('alert.selectSize')); return; }
+                    if (orderQuantity < 1) { alert(i18n.language === 'ar' ? 'الكمية غير صحيحة' : 'Invalid quantity'); return; }
                     setCheckoutStep(2);
                   }} className="modal-order-btn" style={{ opacity: selectedProduct.stock <= 0 ? 0.5 : 1, cursor: selectedProduct.stock <= 0 ? 'not-allowed' : 'pointer' }} disabled={selectedProduct.stock <= 0}>
                     {selectedProduct.stock <= 0 ? (i18n.language === 'ar' ? 'نفذت الكمية' : 'Out of Stock') : (i18n.language === 'ar' ? 'متابعة الطلب' : 'Continue Order')}
@@ -592,34 +593,34 @@ export default function Storefront() {
                 </>
               ) : (
                 <>
-                  <button onClick={() => setCheckoutStep(1)} style={{background:'none',border:'none',color:'var(--gray-light)',cursor:'pointer',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}>
+                  <button onClick={() => setCheckoutStep(1)} style={{ background: 'none', border: 'none', color: 'var(--gray-light)', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <i className={i18n.language === 'ar' ? "fa-solid fa-arrow-right" : "fa-solid fa-arrow-left"}></i> {i18n.language === 'ar' ? 'رجوع' : 'Back'}
                   </button>
-                  <h3 style={{marginBottom:'24px', color:'var(--white)'}}>{i18n.language === 'ar' ? 'بيانات الاستلام' : 'Delivery Details'}</h3>
-                  
-                  <div className="modal-name-wrapper" style={{marginBottom:'12px', position: 'relative'}}>
-                    <i className="fa-solid fa-user" style={{position: 'absolute', right: i18n.language === 'ar' ? '16px' : 'auto', left: i18n.language === 'ar' ? 'auto' : '16px', top: '14px', color: 'var(--accent)'}}></i>
-                    <input type="text" placeholder={i18n.language === 'ar' ? 'الاسم ثلاثي' : 'Full Name'} value={orderName} onChange={(e) => setOrderName(e.target.value)} style={{width: '100%', padding: '12px 16px', paddingRight: i18n.language === 'ar' ? '44px' : '16px', paddingLeft: i18n.language === 'ar' ? '16px' : '44px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', fontFamily: 'inherit'}} />
+                  <h3 style={{ marginBottom: '24px', color: 'var(--white)' }}>{i18n.language === 'ar' ? 'بيانات الاستلام' : 'Delivery Details'}</h3>
+
+                  <div className="modal-name-wrapper" style={{ marginBottom: '12px', position: 'relative' }}>
+                    <i className="fa-solid fa-user" style={{ position: 'absolute', right: i18n.language === 'ar' ? '16px' : 'auto', left: i18n.language === 'ar' ? 'auto' : '16px', top: '14px', color: 'var(--accent)' }}></i>
+                    <input type="text" placeholder={i18n.language === 'ar' ? 'الاسم ثلاثي' : 'Full Name'} value={orderName} onChange={(e) => setOrderName(e.target.value)} style={{ width: '100%', padding: '12px 16px', paddingRight: i18n.language === 'ar' ? '44px' : '16px', paddingLeft: i18n.language === 'ar' ? '16px' : '44px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', fontFamily: 'inherit' }} />
                   </div>
-                  
-                  <div className="modal-phone-wrapper" style={{marginBottom:'12px'}}>
+
+                  <div className="modal-phone-wrapper" style={{ marginBottom: '12px' }}>
                     <i className="fa-solid fa-phone phone-icon"></i>
                     <input type="tel" className="modal-phone" placeholder={t('modal.phonePlaceholder')} maxLength="11" value={orderPhone} onChange={(e) => setOrderPhone(e.target.value)} />
                   </div>
-                  
-                  <div className="modal-address-wrapper" style={{marginBottom:'24px', position: 'relative'}}>
-                    <i className="fa-solid fa-location-dot" style={{position: 'absolute', right: i18n.language === 'ar' ? '16px' : 'auto', left: i18n.language === 'ar' ? 'auto' : '16px', top: '14px', color: 'var(--accent)'}}></i>
-                    <input type="text" className="modal-address" placeholder={i18n.language === 'ar' ? 'العنوان بالتفصيل' : 'Detailed Address'} value={orderAddress} onChange={(e) => setOrderAddress(e.target.value)} style={{width: '100%', padding: '12px 16px', paddingRight: i18n.language === 'ar' ? '44px' : '16px', paddingLeft: i18n.language === 'ar' ? '16px' : '44px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', fontFamily: 'inherit'}} />
+
+                  <div className="modal-address-wrapper" style={{ marginBottom: '24px', position: 'relative' }}>
+                    <i className="fa-solid fa-location-dot" style={{ position: 'absolute', right: i18n.language === 'ar' ? '16px' : 'auto', left: i18n.language === 'ar' ? 'auto' : '16px', top: '14px', color: 'var(--accent)' }}></i>
+                    <input type="text" className="modal-address" placeholder={i18n.language === 'ar' ? 'العنوان بالتفصيل' : 'Detailed Address'} value={orderAddress} onChange={(e) => setOrderAddress(e.target.value)} style={{ width: '100%', padding: '12px 16px', paddingRight: i18n.language === 'ar' ? '44px' : '16px', paddingLeft: i18n.language === 'ar' ? '16px' : '44px', border: '1px solid var(--border-subtle)', borderRadius: '8px', background: 'var(--bg)', color: 'var(--white)', outline: 'none', fontFamily: 'inherit' }} />
                   </div>
-                  
+
                   <button onClick={handleOrder} className="modal-order-btn">
                     <i className="fa-brands fa-whatsapp wa-icon"></i> {i18n.language === 'ar' ? 'تأكيد الطلب عبر واتساب' : 'Confirm Order via WhatsApp'}
                   </button>
-                  
+
                   {showSuccess && (
-                      <div className="modal-success visible">
-                        <i className="fa-solid fa-circle-check"></i> {t('modal.orderSuccess')}
-                      </div>
+                    <div className="modal-success visible">
+                      <i className="fa-solid fa-circle-check"></i> {t('modal.orderSuccess')}
+                    </div>
                   )}
                 </>
               )}

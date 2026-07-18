@@ -94,11 +94,11 @@ const MONGO_URI = process.env.MONGO_URI;
 if (MONGO_URI) {
     mongoose.connect(MONGO_URI, {
         family: 4,
-        // Connection Pool Settings - Optimized for slow connections
+        // Connection Pool Settings - Optimized for very slow connections
         minPoolSize: 2,            // Minimal pool to reduce connection overhead
         maxPoolSize: 10,           // Smaller pool for stability
-        socketTimeoutMS: 60000,    // 60 seconds for very slow connections
-        serverSelectionTimeoutMS: 15000,  // 15 seconds to select server
+        socketTimeoutMS: 180000,   // 180 seconds (3 minutes) for extremely slow connections
+        serverSelectionTimeoutMS: 20000,  // 20 seconds to select server
         connectTimeoutMS: 30000,   // 30 seconds to establish connection
         // Performance optimizations
         maxIdleTimeMS: 60000,      // Keep connections alive for 60s

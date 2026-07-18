@@ -21,7 +21,7 @@ async function fetchStorefrontData(fields) {
     const fetchPromises = [];
 
     // Add timeout and lean() for better performance
-    const QUERY_TIMEOUT = 30000; // 30 seconds for slow MongoDB Atlas connections
+    const QUERY_TIMEOUT = 150000; // 150 seconds (2.5 minutes) for extremely slow MongoDB Atlas connections
 
     if (fields.includes('products')) {
         fetchPromises.push(
